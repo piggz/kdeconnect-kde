@@ -63,6 +63,9 @@ DeviceIndicator::DeviceIndicator(DeviceDbusInterface* device)
     : QMenu(device->name(), nullptr)
     , m_device(device)
 {
+#ifdef Q_OS_WIN
+    QIcon::setThemeSearchPaths({QStandardPaths::locate(QStandardPaths::AppDataLocation, "icons/hicolor/scalable/apps", QStandardPaths::LocateDirectory)});
+#endif
     setIcon(QIcon::fromTheme(device->iconName()));
 
     connect(device, SIGNAL(nameChanged(QString)), this, SLOT(setText(QString)));
