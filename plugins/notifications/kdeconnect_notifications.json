@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "albertvaka@gmail.com",
-                "Name": "Albert Vaca"
+                "Name": "Albert Vaca",
+                "Name[x-test]": "xxAlbert Vacaxx"
             }
         ],
         "Description": "Show device's notifications on this computer and keep them in sync",
+        "Description[nl]": "Apparaatmeldingen op deze computer tonen en ze gesynchroniseerd houden",
+        "Description[pt]": "Mostrar as notificações do dispositivo neste computador e mantê-las sincronizadas",
+        "Description[sv]": "Visa enhetens underrättelser på datorn och håll dem synkroniserade",
+        "Description[x-test]": "xxShow device's notifications on this computer and keep them in syncxx",
         "EnabledByDefault": true,
         "Icon": "preferences-desktop-notification",
         "Id": "kdeconnect_notifications",
         "License": "GPL",
         "Name": "Receive notifications",
+        "Name[nl]": "Meldingen ontvangen",
+        "Name[pt]": "Receber as notificações",
+        "Name[sv]": "Ta emot underrättelser",
+        "Name[x-test]": "xxReceive notificationsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

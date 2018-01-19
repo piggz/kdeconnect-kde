@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "kinnalru@gmail.com",
-                "Name": "Samoilenko Yuri"
+                "Name": "Samoilenko Yuri",
+                "Name[x-test]": "xxSamoilenko Yurixx"
             }
         ],
         "Description": "Browse the remote device filesystem using SFTP",
+        "Description[nl]": "Blader door het bestandssysteem met SFTP op het apparaat op afstand",
+        "Description[pt]": "Navegar pelo sistema de ficheiros de um dispositivo remoto por SFTP",
+        "Description[sv]": "Bläddra i den andra apparatens filsystem med SFTP",
+        "Description[x-test]": "xxBrowse the remote device filesystem using SFTPxx",
         "EnabledByDefault": true,
         "Icon": "folder-documents",
         "Id": "kdeconnect_sftp",
         "License": "GPL",
         "Name": "Remote filesystem browser",
+        "Name[nl]": "Bestandssysteembrowser op afstand",
+        "Name[pt]": "Navegador de sistemas de ficheiros remotos",
+        "Name[sv]": "Extern filsystembläddrare",
+        "Name[x-test]": "xxRemote filesystem browserxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

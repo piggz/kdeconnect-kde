@@ -4,19 +4,29 @@
         "Authors": [
             {
                 "Email": "albertvaka@gmail.com",
-                "Name": "Albert Vaca"
+                "Name": "Albert Vaca",
+                "Name[x-test]": "xxAlbert Vacaxx"
             },
             {
                 "Email": "david@davidedmundson.co.uk",
-                "Name": "David Edmundson"
+                "Name": "David Edmundson",
+                "Name[x-test]": "xxDavid Edmundsonxx"
             }
         ],
         "Description": "Execute console commands remotely",
+        "Description[nl]": "Commando's in de terminal op afstand laten uitvoeren",
+        "Description[pt]": "Executar de forma remota comandos da consola",
+        "Description[sv]": "Kör terminalkommandon på distans",
+        "Description[x-test]": "xxExecute console commands remotelyxx",
         "EnabledByDefault": true,
         "Icon": "system-run",
         "Id": "kdeconnect_runcommand",
         "License": "GPL",
         "Name": "Run commands",
+        "Name[nl]": "Commando's uitvoeren",
+        "Name[pt]": "Executar comandos",
+        "Name[sv]": "Kör kommandon",
+        "Name[x-test]": "xxRun commandsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

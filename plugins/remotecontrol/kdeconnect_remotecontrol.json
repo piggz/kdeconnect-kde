@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "aleixpol@kde.org",
-                "Name": "Aleix Pol"
+                "Name": "Aleix Pol",
+                "Name[x-test]": "xxAleix Polxx"
             }
         ],
         "Description": "Control Remote systems",
+        "Description[nl]": "Systemen op afstand bedienen",
+        "Description[pt]": "Comandar sistemas à distância",
+        "Description[sv]": "Styr externt system",
+        "Description[x-test]": "xxControl Remote systemsxx",
         "EnabledByDefault": true,
         "Icon": "applications-multimedia",
         "Id": "kdeconnect_remotecontrol",
         "License": "GPL",
         "Name": "RemoteControl",
+        "Name[nl]": "Afstandsbediening",
+        "Name[pt]": "Comando à Distância",
+        "Name[sv]": "Fjärrkontroll",
+        "Name[x-test]": "xxRemoteControlxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

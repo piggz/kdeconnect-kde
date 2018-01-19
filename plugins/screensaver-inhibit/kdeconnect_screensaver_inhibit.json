@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "pmdematagoda@mykolab.ch",
-                "Name": "Pramod Dematagoda"
+                "Name": "Pramod Dematagoda",
+                "Name[x-test]": "xxPramod Dematagodaxx"
             }
         ],
         "Description": "Inhibit the screensaver when the device is connected",
+        "Description[nl]": "Houdt de schermbeveiliging tegen wanneer het apparaat is verbonden",
+        "Description[pt]": "Inibir o protector de ecrã quando o dispositivo estiver ligado",
+        "Description[sv]": "Stoppa skärmsläckaren när apparaten ansluts",
+        "Description[x-test]": "xxInhibit the screensaver when the device is connectedxx",
         "EnabledByDefault": false,
         "Icon": "preferences-desktop-screensaver",
         "Id": "kdeconnect_screensaver_inhibit",
         "License": "GPL",
         "Name": "Inhibit screensaver",
+        "Name[nl]": "Schermbeveiliging tegenhouden",
+        "Name[pt]": "Inibir o protector de ecrã",
+        "Name[sv]": "Stoppa skärmsläckare",
+        "Name[x-test]": "xxInhibit screensaverxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "aleixpol@kde.org",
-                "Name": "Aleix Pol"
+                "Name": "Aleix Pol",
+                "Name[x-test]": "xxAleix Polxx"
             }
         ],
         "Description": "Locks your systems",
+        "Description[nl]": "Vergrendeld uw systemen",
+        "Description[pt]": "Bloqueia os seus sistemas",
+        "Description[sv]": "Låser dina system",
+        "Description[x-test]": "xxLocks your systemsxx",
         "EnabledByDefault": true,
         "Icon": "applications-miscelaneaous",
         "Id": "kdeconnect_lockdevice",
         "License": "GPL",
         "Name": "LockDevice",
+        "Name[nl]": "Apparaat vergrendelen",
+        "Name[pt]": "Bloqueio de Dispositivo",
+        "Name[sv]": "Lås enhet",
+        "Name[x-test]": "xxLockDevicexx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

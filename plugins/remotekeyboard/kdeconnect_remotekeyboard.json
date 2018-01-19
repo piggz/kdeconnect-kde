@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "holger.k@elberer.de",
-                "Name": "Holger Kaelberer"
+                "Name": "Holger Kaelberer",
+                "Name[x-test]": "xxHolger Kaelbererxx"
             }
         ],
         "Description": "Use your keyboard to send key-events to your paired device",
+        "Description[nl]": "Uw toetsenbord gebruiken om toetsgebeurtenissen naar uw gepaarde apparaat te verzenden",
+        "Description[pt]": "Usar o seu teclado para enviar eventos de teclas para o seu dispositivo emparelhado",
+        "Description[sv]": "Använd tangentbordet för att skicka tangenthändelser till den parade enheten",
+        "Description[x-test]": "xxUse your keyboard to send key-events to your paired devicexx",
         "EnabledByDefault": true,
         "Icon": "edit-select",
         "Id": "kdeconnect_remotekeyboard",
         "License": "GPL",
         "Name": "Remote keyboard from the desktop",
+        "Name[nl]": "Toetsenbord op afstand vanaf het bureaublad",
+        "Name[pt]": "Teclado remoto do ambiente de trabalho",
+        "Name[sv]": "Externt tangentbord från skrivbordet",
+        "Name[x-test]": "xxRemote keyboard from the desktopxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

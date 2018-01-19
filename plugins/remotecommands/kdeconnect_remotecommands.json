@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "aleixpol@kde.org",
-                "Name": "Aleix Pol"
+                "Name": "Aleix Pol",
+                "Name[x-test]": "xxAleix Polxx"
             }
         ],
         "Description": "Trigger commands predefined on the remote device",
+        "Description[nl]": "Start commando's voorgedefinieerd op het apparaat op afstand",
+        "Description[pt]": "Despoletar os comandos predefinidos para o dispositivo remoto",
+        "Description[sv]": "Utför kommandon fördefinierade på den andra apparaten",
+        "Description[x-test]": "xxTrigger commands predefined on the remote devicexx",
         "EnabledByDefault": true,
         "Icon": "system-run",
         "Id": "kdeconnect_remotecommands",
         "License": "GPL",
         "Name": "Host remote commands",
+        "Name[nl]": "Host voor commando's op afstand",
+        "Name[pt]": "Alojar os comandos remotos",
+        "Name[sv]": "Fjärrkommandon för värddator",
+        "Name[x-test]": "xxHost remote commandsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

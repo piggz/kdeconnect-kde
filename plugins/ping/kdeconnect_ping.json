@@ -4,15 +4,23 @@
         "Authors": [
             {
                 "Email": "albertvaka@gmail.com",
-                "Name": "Albert Vaca"
+                "Name": "Albert Vaca",
+                "Name[x-test]": "xxAlbert Vacaxx"
             }
         ],
         "Description": "Send and receive pings",
+        "Description[nl]": "Pings verzenden en ontvangen",
+        "Description[pt]": "Enviar e receber contactos",
+        "Description[sv]": "Skicka och ta emot ping",
+        "Description[x-test]": "xxSend and receive pingsxx",
         "EnabledByDefault": true,
         "Icon": "dialog-ok",
         "Id": "kdeconnect_ping",
         "License": "GPL",
         "Name": "Ping",
+        "Name[pt]": "Contacto",
+        "Name[sv]": "Pinga",
+        "Name[x-test]": "xxPingxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

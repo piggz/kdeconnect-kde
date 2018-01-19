@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "holger.k@elberer.de",
-                "Name": "Holger Kaelberer"
+                "Name": "Holger Kaelberer",
+                "Name[x-test]": "xxHolger Kaelbererxx"
             }
         ],
         "Description": "Broadcast this computer's notifications, so they can be shown on other devices.",
+        "Description[nl]": "De meldingen van deze computer rondsturen, zodat ze op andere apparaten getoond kunnen worden.",
+        "Description[pt]": "Difunde as notificações deste computador, para que possam ser apresentadas noutros dispositivos.",
+        "Description[sv]": "Sänd ut datorns underrättelser så att de kan visas på andra enheter.",
+        "Description[x-test]": "xxBroadcast this computer's notifications, so they can be shown on other devices.xx",
         "EnabledByDefault": false,
         "Icon": "preferences-desktop-notification",
         "Id": "kdeconnect_sendnotifications",
         "License": "GPL",
         "Name": "Send notifications",
+        "Name[nl]": "Stuur meldingen",
+        "Name[pt]": "Enviar as notificações",
+        "Name[sv]": "Skicka underrättelser",
+        "Name[x-test]": "xxSend notificationsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

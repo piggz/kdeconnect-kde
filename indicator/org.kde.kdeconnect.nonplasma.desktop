@@ -1,6 +1,14 @@
 [Desktop Entry]
 Name=KDE Connect Indicator
+Name[nl]=KDE-Connect indicator
+Name[pt]=Indicador do KDE Connect
+Name[sv]=KDE-anslut indikator
+Name[x-test]=xxKDE Connect Indicatorxx
 Comment=Display information about your devices
+Comment[nl]=Toon informatie over uw apparaten
+Comment[pt]=Mostrar informações sobre os seus dispositivos
+Comment[sv]=Visa information om enheter
+Comment[x-test]=xxDisplay information about your devicesxx
 Exec=kdeconnect-indicator
 Icon=kdeconnect
 Type=Application

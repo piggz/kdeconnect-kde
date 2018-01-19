@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "ahmedibrahimkhali@gmail.com",
-                "Name": "Ahmed I. Khalil"
+                "Name": "Ahmed I. Khalil",
+                "Name[x-test]": "xxAhmed I. Khalilxx"
             }
         ],
         "Description": "Use your phone as a touchpad and keyboard",
+        "Description[nl]": "Uw telefoon gebruiken als een touchpad en toetsenbord",
+        "Description[pt]": "Use o seu telefone como um rato e teclado por toque",
+        "Description[sv]": "Använd telefonen som mus och tangentbord",
+        "Description[x-test]": "xxUse your phone as a touchpad and keyboardxx",
         "EnabledByDefault": true,
         "Icon": "edit-select",
         "Id": "kdeconnect_mousepad",
         "License": "GPL",
         "Name": "Virtual input",
+        "Name[nl]": "Virtuele invoer",
+        "Name[pt]": "Entrada virtual",
+        "Name[sv]": "Virtuell inmatning",
+        "Name[x-test]": "xxVirtual inputxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

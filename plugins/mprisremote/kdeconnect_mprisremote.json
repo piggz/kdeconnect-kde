@@ -4,15 +4,23 @@
         "Authors": [
             {
                 "Email": "aleixpol@kde.org",
-                "Name": "Aleix Pol"
+                "Name": "Aleix Pol",
+                "Name[x-test]": "xxAleix Polxx"
             }
         ],
         "Description": "Control MPRIS services",
+        "Description[nl]": "MPRIS-services besturen",
+        "Description[pt]": "Controlar os serviços MPRIS",
+        "Description[sv]": "Styr MPRIS-tjänster",
+        "Description[x-test]": "xxControl MPRIS servicesxx",
         "EnabledByDefault": true,
         "Icon": "applications-multimedia",
         "Id": "kdeconnect_mprisremote",
         "License": "GPL",
         "Name": "MprisRemote",
+        "Name[pt]": "Comando MPRIS",
+        "Name[sv]": "MPRIS-fjärrkontroll",
+        "Name[x-test]": "xxMprisRemotexx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

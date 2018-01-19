@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "albertvaka@gmail.com",
-                "Name": "Albert Vaca"
+                "Name": "Albert Vaca",
+                "Name[x-test]": "xxAlbert Vacaxx"
             }
         ],
         "Description": "Show notifications for calls and SMS",
+        "Description[nl]": "Meldingen tonen van oproepen en SMSjes",
+        "Description[pt]": "Mostrar notificações para as chamadas e SMS",
+        "Description[sv]": "Visa underrättelser om samtal och SMS",
+        "Description[x-test]": "xxShow notifications for calls and SMSxx",
         "EnabledByDefault": true,
         "Icon": "call-start",
         "Id": "kdeconnect_telephony",
         "License": "GPL",
         "Name": "Telephony integration",
+        "Name[nl]": "Telefoonintegratie",
+        "Name[pt]": "Integração telefónica",
+        "Name[sv]": "Integrering av telefoni",
+        "Name[x-test]": "xxTelephony integrationxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

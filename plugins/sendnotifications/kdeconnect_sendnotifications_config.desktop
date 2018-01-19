@@ -6,5 +6,9 @@ X-KDE-Library=kdeconnect_sendnotifications_config
 X-KDE-ParentComponents=kdeconnect_sendnotifications
 
 Name=Notification synchronization plugin settings
+Name[nl]=Instellingen van plug-in voor synchronisatie van meldingen
+Name[pt]=Configuração do 'plugin' de sincronização das notificações
+Name[sv]=Inställningar av insticksprogram för underrättelsesynkronisering
+Name[x-test]=xxNotification synchronization plugin settingsxx
 
 Categories=Qt;KDE;X-KDE-settings-kdeconnect;

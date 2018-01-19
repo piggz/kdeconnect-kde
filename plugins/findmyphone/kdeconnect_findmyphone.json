@@ -3,20 +3,30 @@
         "Authors": [
             {
                 "Email": "apparle@gmail.com",
-                "Name": "Apoorv Parle"
+                "Name": "Apoorv Parle",
+                "Name[x-test]": "xxApoorv Parlexx"
             },
             {
                 "Email": "davidedmundson@kde.org",
-                "Name": "David Edmundson"
+                "Name": "David Edmundson",
+                "Name[x-test]": "xxDavid Edmundsonxx"
             }
         ],
         "Description": "Find your lost phone by making it play an alarm sound",
+        "Description[nl]": "Zoek uw verloren telefoon door het een wekkersignaal te laten spelen",
+        "Description[pt]": "Descobrir o seu telefone perdido, fazendo-o tocar um som de alarme",
+        "Description[sv]": "Hitta din förlorade telefon genom att få den att spela ett alarmljud",
+        "Description[x-test]": "xxFind your lost phone by making it play an alarm soundxx",
         "EnabledByDefault": true,
         "Encoding": "UTF-8",
         "Icon": "edit-find",
         "Id": "kdeconnect_findmyphone",
         "License": "GPL",
         "Name": "Ring my phone",
+        "Name[nl]": "Bel mijn telefoon",
+        "Name[pt]": "Tocar o meu telefone",
+        "Name[sv]": "Hitta min telefon",
+        "Name[x-test]": "xxRing my phonexx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],

@@ -4,15 +4,24 @@
         "Authors": [
             {
                 "Email": "albertvaka@gmail.com",
-                "Name": "Albert Vaca"
+                "Name": "Albert Vaca",
+                "Name[x-test]": "xxAlbert Vacaxx"
             }
         ],
         "Description": "Show your phone battery next to your computer battery",
+        "Description[nl]": "Uw telefoonbatterij naast uw computerbatterij tonen",
+        "Description[pt]": "Mostrar a bateria do seu telefone ao lado da do seu computador",
+        "Description[sv]": "Visa telefonens batteri intill datorbatteriet",
+        "Description[x-test]": "xxShow your phone battery next to your computer batteryxx",
         "EnabledByDefault": true,
         "Icon": "preferences-system-power-management",
         "Id": "kdeconnect_battery",
         "License": "GPL",
         "Name": "Battery monitor",
+        "Name[nl]": "Batterijmonitor",
+        "Name[pt]": "Monitor da bateria",
+        "Name[sv]": "Batteriövervakare",
+        "Name[x-test]": "xxBattery monitorxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
         ],
