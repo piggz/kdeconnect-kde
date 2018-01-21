@@ -11,4 +11,5 @@ Name=KDEConnect daemon
 Name[nl]=KDEConnect-daemon
 Name[pt]=Serviço do KDE Connect
 Name[sv]=Demon för KDE-anslut
+Name[uk]=Фонова служба KDEConnect
 Name[x-test]=xxKDEConnect daemonxx

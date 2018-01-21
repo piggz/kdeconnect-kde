@@ -3,11 +3,13 @@ Name=KDE Connect
 Name[nl]=KDE Connect
 Name[pt]=KDE Connect
 Name[sv]=KDE-anslut
+Name[uk]=З’єднання KDE
 Name[x-test]=xxKDE Connectxx
 Comment=Show notifications from your devices using KDE Connect
 Comment[nl]=Meldingen van uw apparaten met KDE Connect tonen
 Comment[pt]=Mostrar notificações dos seus dispositivos usando o KDE Connect
 Comment[sv]=Visa underrättelser från apparater med KDE anslut
+Comment[uk]=Показ сповіщень з ваших пристроїв за допомогою програми «З’єднання KDE»
 Comment[x-test]=xxShow notifications from your devices using KDE Connectxx
 
 Icon=kdeconnect

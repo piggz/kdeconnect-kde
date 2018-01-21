@@ -12,6 +12,7 @@
         "Description[nl]": "Bestanden, URL's of platte tekst gemakkelijk ontvangen en verzenden",
         "Description[pt]": "Receber e enviar ficheiros, URL's ou texto normal de forma simples",
         "Description[sv]": "Ta emot och skicka filer, webbadresser eller vanlig text enkelt",
+        "Description[uk]": "Спрощене отримання і надсилання файлів, адрес або текстових фрагментів",
         "Description[x-test]": "xxReceive and send files, URLs or plain text easilyxx",
         "EnabledByDefault": true,
         "Icon": "folder-network",
@@ -21,6 +22,7 @@
         "Name[nl]": "Delen en ontvangen",
         "Name[pt]": "Partilhar e receber",
         "Name[sv]": "Dela och ta emot",
+        "Name[uk]": "Оприлюднення і отримання",
         "Name[x-test]": "xxShare and receivexx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

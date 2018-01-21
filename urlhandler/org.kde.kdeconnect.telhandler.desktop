@@ -3,6 +3,7 @@ Name=KDE Connect Phone URL Handler
 Name[nl]=URL behandelaar van KDE-Connect-telefoon
 Name[pt]=Tratamento de URL's Telefónicos do KDE Connect
 Name[sv]=KDE-anslut hanterare av telefonwebbadress
+Name[uk]=Обробник телефонних адрес KDE Connect
 Name[x-test]=xxKDE Connect Phone URL Handlerxx
 Exec=kdeconnect-handler %U
 Icon=kdeconnect

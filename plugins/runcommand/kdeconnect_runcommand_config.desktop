@@ -9,6 +9,7 @@ Name=Run Command plugin settings
 Name[nl]=Plug-in-instellingen van commando Uitvoeren
 Name[pt]=Configuração do 'plugin' de execução de comandos
 Name[sv]=Inställningar av insticksprogram för kör kommando
+Name[uk]=Параметри додатка запуску команд
 Name[x-test]=xxRun Command plugin settingsxx
 
 Categories=Qt;KDE;X-KDE-settings-kdeconnect;

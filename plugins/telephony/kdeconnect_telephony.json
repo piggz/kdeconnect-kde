@@ -12,6 +12,7 @@
         "Description[nl]": "Meldingen tonen van oproepen en SMSjes",
         "Description[pt]": "Mostrar notificações para as chamadas e SMS",
         "Description[sv]": "Visa underrättelser om samtal och SMS",
+        "Description[uk]": "Показ сповіщень щодо дзвінків і SMS",
         "Description[x-test]": "xxShow notifications for calls and SMSxx",
         "EnabledByDefault": true,
         "Icon": "call-start",
@@ -21,6 +22,7 @@
         "Name[nl]": "Telefoonintegratie",
         "Name[pt]": "Integração telefónica",
         "Name[sv]": "Integrering av telefoni",
+        "Name[uk]": "Інтеграція з системою телефонії",
         "Name[x-test]": "xxTelephony integrationxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

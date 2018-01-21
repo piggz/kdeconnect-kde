@@ -12,6 +12,7 @@
         "Description[nl]": "Houdt de schermbeveiliging tegen wanneer het apparaat is verbonden",
         "Description[pt]": "Inibir o protector de ecrã quando o dispositivo estiver ligado",
         "Description[sv]": "Stoppa skärmsläckaren när apparaten ansluts",
+        "Description[uk]": "Забороняє зберігач екрана, якщо з’єднано пристрій",
         "Description[x-test]": "xxInhibit the screensaver when the device is connectedxx",
         "EnabledByDefault": false,
         "Icon": "preferences-desktop-screensaver",
@@ -21,6 +22,7 @@
         "Name[nl]": "Schermbeveiliging tegenhouden",
         "Name[pt]": "Inibir o protector de ecrã",
         "Name[sv]": "Stoppa skärmsläckare",
+        "Name[uk]": "Заборона зберігача екрана",
         "Name[x-test]": "xxInhibit screensaverxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

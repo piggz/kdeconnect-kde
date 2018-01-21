@@ -12,6 +12,7 @@
         "Description[nl]": "Uw telefoonbatterij naast uw computerbatterij tonen",
         "Description[pt]": "Mostrar a bateria do seu telefone ao lado da do seu computador",
         "Description[sv]": "Visa telefonens batteri intill datorbatteriet",
+        "Description[uk]": "Показ даних щодо рівня заряду акумулятора на телефоні поряд з даними щодо рівня заряду акумулятора комп’ютера",
         "Description[x-test]": "xxShow your phone battery next to your computer batteryxx",
         "EnabledByDefault": true,
         "Icon": "preferences-system-power-management",
@@ -21,6 +22,7 @@
         "Name[nl]": "Batterijmonitor",
         "Name[pt]": "Monitor da bateria",
         "Name[sv]": "Batteriövervakare",
+        "Name[uk]": "Монітор акумулятора",
         "Name[x-test]": "xxBattery monitorxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

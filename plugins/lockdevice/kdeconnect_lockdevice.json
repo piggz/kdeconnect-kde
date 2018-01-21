@@ -12,6 +12,7 @@
         "Description[nl]": "Vergrendeld uw systemen",
         "Description[pt]": "Bloqueia os seus sistemas",
         "Description[sv]": "Låser dina system",
+        "Description[uk]": "Блокує вашу систему",
         "Description[x-test]": "xxLocks your systemsxx",
         "EnabledByDefault": true,
         "Icon": "applications-miscelaneaous",

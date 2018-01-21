@@ -12,6 +12,7 @@
         "Description[nl]": "Start commando's voorgedefinieerd op het apparaat op afstand",
         "Description[pt]": "Despoletar os comandos predefinidos para o dispositivo remoto",
         "Description[sv]": "Utför kommandon fördefinierade på den andra apparaten",
+        "Description[uk]": "Запуск команд, попередньо визначених на віддаленому пристрої",
         "Description[x-test]": "xxTrigger commands predefined on the remote devicexx",
         "EnabledByDefault": true,
         "Icon": "system-run",
@@ -21,6 +22,7 @@
         "Name[nl]": "Host voor commando's op afstand",
         "Name[pt]": "Alojar os comandos remotos",
         "Name[sv]": "Fjärrkommandon för värddator",
+        "Name[uk]": "Віддалені команди вузлу",
         "Name[x-test]": "xxHost remote commandsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

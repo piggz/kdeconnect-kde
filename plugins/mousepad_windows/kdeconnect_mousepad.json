@@ -12,6 +12,7 @@
         "Description[nl]": "Uw telefoon gebruiken als een touchpad en toetsenbord",
         "Description[pt]": "Use o seu telefone como um rato e teclado por toque",
         "Description[sv]": "Använd telefonen som mus och tangentbord",
+        "Description[uk]": "Скористайтеся телефоном як замінником сенсорної панелі і клавіатури",
         "Description[x-test]": "xxUse your phone as a touchpad and keyboardxx",
         "EnabledByDefault": true,
         "Icon": "edit-select",
@@ -21,6 +22,7 @@
         "Name[nl]": "Virtuele invoer",
         "Name[pt]": "Entrada virtual",
         "Name[sv]": "Virtuell inmatning",
+        "Name[uk]": "Віртуальне введення даних",
         "Name[x-test]": "xxVirtual inputxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

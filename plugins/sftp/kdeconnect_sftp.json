@@ -5,6 +5,7 @@
             {
                 "Email": "kinnalru@gmail.com",
                 "Name": "Samoilenko Yuri",
+                "Name[uk]": "Юрій Самойленко",
                 "Name[x-test]": "xxSamoilenko Yurixx"
             }
         ],
@@ -12,6 +13,7 @@
         "Description[nl]": "Blader door het bestandssysteem met SFTP op het apparaat op afstand",
         "Description[pt]": "Navegar pelo sistema de ficheiros de um dispositivo remoto por SFTP",
         "Description[sv]": "Bläddra i den andra apparatens filsystem med SFTP",
+        "Description[uk]": "Перегляд файлових систем на сторонніх пристроях за допомогою SFTP",
         "Description[x-test]": "xxBrowse the remote device filesystem using SFTPxx",
         "EnabledByDefault": true,
         "Icon": "folder-documents",
@@ -21,6 +23,7 @@
         "Name[nl]": "Bestandssysteembrowser op afstand",
         "Name[pt]": "Navegador de sistemas de ficheiros remotos",
         "Name[sv]": "Extern filsystembläddrare",
+        "Name[uk]": "Перегляд віддалених файлових систем",
         "Name[x-test]": "xxRemote filesystem browserxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

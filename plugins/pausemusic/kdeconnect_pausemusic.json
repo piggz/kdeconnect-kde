@@ -12,6 +12,7 @@
         "Description[nl]": "Muziek/video's pauzeren tijdens een telefoongesprek",
         "Description[pt]": "Pausar a música/vídeos durante uma chamada telefónica",
         "Description[sv]": "Pausa musik eller videor under ett telefonsamtal",
+        "Description[uk]": "Призупинка відтворення музики і відео на час телефонних дзвінків",
         "Description[x-test]": "xxPause music/videos during a phone callxx",
         "EnabledByDefault": true,
         "Icon": "media-playback-pause",
@@ -21,6 +22,7 @@
         "Name[nl]": "Media pauzeren tijdens oproepen",
         "Name[pt]": "Pausar a reprodução durante as chamadas",
         "Name[sv]": "Pausa media under samtal",
+        "Name[uk]": "Призупинка відтворення під час дзвінків",
         "Name[x-test]": "xxPause media during callsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"

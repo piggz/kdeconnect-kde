@@ -6,6 +6,7 @@ Name=KDEConnect Plugin
 Name[nl]=Plug-in van KDEConnect
 Name[pt]='Plugin' do KDEConnect
 Name[sv]=KDE anslutningsinsticksprogram
+Name[uk]=Додаток KDEConnect
 Name[x-test]=xxKDEConnect Pluginxx
 
 # mandatory, list of all the package types supported

@@ -4,12 +4,14 @@ Name=Send file via KDE Connect service
 Name[nl]=Bestand via de service KDE Connect versturen
 Name[pt]=Enviar um ficheiro pelo serviço KDE Connect
 Name[sv]=Skicka fil via KDE:s anslutningstjänst
+Name[uk]=Надсилання файла за допомогою служби з’єднання KDE
 Name[x-test]=xxSend file via KDE Connect servicexx
 X-KDE-Library=kdeconnectfileitemaction
 X-KDE-Submenu=Connect
 X-KDE-Submenu[nl]=Verbinden
 X-KDE-Submenu[pt]=Ligar
 X-KDE-Submenu[sv]=Anslut
+X-KDE-Submenu[uk]=З’єднання
 X-KDE-Submenu[x-test]=xxConnectxx
 
 Icon=preferences-system-network

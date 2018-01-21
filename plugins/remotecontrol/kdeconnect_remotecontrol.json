@@ -12,6 +12,7 @@
         "Description[nl]": "Systemen op afstand bedienen",
         "Description[pt]": "Comandar sistemas à distância",
         "Description[sv]": "Styr externt system",
+        "Description[uk]": "Системи віддаленого керування",
         "Description[x-test]": "xxControl Remote systemsxx",
         "EnabledByDefault": true,
         "Icon": "applications-multimedia",

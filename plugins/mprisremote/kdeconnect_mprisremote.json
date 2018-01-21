@@ -12,6 +12,7 @@
         "Description[nl]": "MPRIS-services besturen",
         "Description[pt]": "Controlar os serviços MPRIS",
         "Description[sv]": "Styr MPRIS-tjänster",
+        "Description[uk]": "Керування службами MPRIS",
         "Description[x-test]": "xxControl MPRIS servicesxx",
         "EnabledByDefault": true,
         "Icon": "applications-multimedia",

@@ -12,6 +12,7 @@
         "Description[nl]": "Apparaatmeldingen op deze computer tonen en ze gesynchroniseerd houden",
         "Description[pt]": "Mostrar as notificações do dispositivo neste computador e mantê-las sincronizadas",
         "Description[sv]": "Visa enhetens underrättelser på datorn och håll dem synkroniserade",
+        "Description[uk]": "Показ сповіщень з пристрою на цьому комп’ютері та підтримання синхронізації даних сповіщень",
         "Description[x-test]": "xxShow device's notifications on this computer and keep them in syncxx",
         "EnabledByDefault": true,
         "Icon": "preferences-desktop-notification",
@@ -21,6 +22,7 @@
         "Name[nl]": "Meldingen ontvangen",
         "Name[pt]": "Receber as notificações",
         "Name[sv]": "Ta emot underrättelser",
+        "Name[uk]": "Отримати сповіщення",
         "Name[x-test]": "xxReceive notificationsxx",
         "ServiceTypes": [
             "KdeConnect/Plugin"
