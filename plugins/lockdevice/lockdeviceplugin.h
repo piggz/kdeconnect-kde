@@ -27,7 +27,8 @@
 
 class OrgFreedesktopScreenSaverInterface;
 
-#define PACKAGE_TYPE_LOCK QLatin1String("kdeconnect.lock")
+#define PACKAGE_TYPE_LOCK QStringLiteral("kdeconnect.lock")
+#define PACKAGE_TYPE_LOCK_REQUEST QStringLiteral("kdeconnect.lock.request")
 
 class Q_DECL_EXPORT LockDevicePlugin
     : public KdeConnectPlugin
@@ -37,12 +38,13 @@ class Q_DECL_EXPORT LockDevicePlugin
     Q_PROPERTY(bool isLocked READ isLocked WRITE setLocked NOTIFY lockedChanged)
 
 public:
-    explicit LockDevicePlugin(QObject *parent, const QVariantList &args);
-    virtual ~LockDevicePlugin();
+    explicit LockDevicePlugin(QObject* parent, const QVariantList &args);
+    ~LockDevicePlugin() override;
 
     bool isLocked() const;
     void setLocked(bool b);
 
+    QString dbusPath() const override;
     void connected() override;
     bool receivePackage(const NetworkPackage & np) override;
 
@@ -50,7 +52,6 @@ Q_SIGNALS:
     void lockedChanged(bool locked);
 
 private:
-    QString dbusPath() const;
     bool m_remoteLocked;
 
     OrgFreedesktopScreenSaverInterface* iface();

@@ -55,25 +55,25 @@ QList<QAction*> SendFileItemAction::actions(const KFileItemListProperties& fileI
     QDBusPendingReply<QStringList> reply = iface.devices(true, true);
     reply.waitForFinished();
     const QStringList devices = reply.value();
-    foreach (const QString& id, devices) {
+    for (const QString& id : devices) {
         DeviceDbusInterface deviceIface(id);
         if (!deviceIface.isValid()) {
             continue;
         }
-        if (!deviceIface.hasPlugin("kdeconnect_share")) {
+        if (!deviceIface.hasPlugin(QStringLiteral("kdeconnect_share"))) {
             continue;
         }
         QAction* action = new QAction(QIcon::fromTheme(deviceIface.iconName()), deviceIface.name(), parentWidget);
         action->setProperty("id", id);
         action->setProperty("urls", QVariant::fromValue(fileItemInfos.urlList()));
         action->setProperty("parentWidget", QVariant::fromValue(parentWidget));
-        connect(action, SIGNAL(triggered(bool)), this, SLOT(sendFile()));
+        connect(action, &QAction::triggered, this, &SendFileItemAction::sendFile);
         actions += action;
     }
 
     if (actions.count() > 1) {
-        QAction *menuAction = new QAction(QIcon::fromTheme("preferences-system-network"), i18n("Send via KDE Connect"), parentWidget);
-        QMenu *menu = new QMenu();
+        QAction* menuAction = new QAction(QIcon::fromTheme(QStringLiteral("preferences-system-network")), i18n("Send via KDE Connect"), parentWidget);
+        QMenu* menu = new QMenu(parentWidget);
         menu->addActions(actions);
         menuAction->setMenu(menu);
         return QList<QAction*>() << menuAction;
@@ -87,10 +87,10 @@ QList<QAction*> SendFileItemAction::actions(const KFileItemListProperties& fileI
 
 void SendFileItemAction::sendFile()
 {
-    QList<QUrl> urls = sender()->property("urls").value<QList<QUrl>>();
+    const QList<QUrl> urls = sender()->property("urls").value<QList<QUrl>>();
     QString id = sender()->property("id").toString();
-    foreach(const QUrl& url, urls) {
-        QDBusMessage msg = QDBusMessage::createMethodCall("org.kde.kdeconnect", "/modules/kdeconnect/devices/"+id+"/share", "org.kde.kdeconnect.device.share", "shareUrl");
+    for (const QUrl& url : urls) {
+        QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.kdeconnect"), "/modules/kdeconnect/devices/"+id+"/share", QStringLiteral("org.kde.kdeconnect.device.share"), QStringLiteral("shareUrl"));
         msg.setArguments(QVariantList() << url.toString());
         QDBusConnection::sessionBus().call(msg);
     }

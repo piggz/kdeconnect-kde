@@ -39,13 +39,13 @@ class KdeConnectKcm
 {
     Q_OBJECT
 public:
-    KdeConnectKcm(QWidget *parent, const QVariantList&);
-    virtual ~KdeConnectKcm();
+    KdeConnectKcm(QWidget* parent, const QVariantList&);
+    ~KdeConnectKcm() override;
 
 private:
-    virtual void save();
-    virtual QSize sizeHint() const;
-    virtual QSize minimumSizeHint() const;
+    void save() override;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
 private Q_SLOTS:
     void deviceSelected(const QModelIndex& current);
@@ -53,20 +53,29 @@ private Q_SLOTS:
     void pluginsConfigChanged();
     void sendPing();
     void resetSelection();
-    void pairingChanged(bool);
+    void trustedChanged(bool);
     void pairingFailed(const QString& error);
     void refresh();
     void renameShow();
     void renameDone();
     void setRenameMode(bool b);
+    void resetCurrentDevice();
+    void currentDevicePairingChanged(bool pairing);
+    void acceptPairing();
+    void rejectPairing();
 
 private:
+    enum TrustStatus { NotTrusted, Requested, RequestedByPeer, Trusted };
+    void setCurrentDeviceTrusted(TrustStatus trusted);
+    void resetDeviceView();
+
     Ui::KdeConnectKcmUi* kcmUi;
     DaemonDbusInterface* daemon;
     DevicesModel* devicesModel;
     DevicesSortProxyModel* sortProxyModel;
     DeviceDbusInterface* currentDevice;
     QModelIndex currentIndex;
+    QStringList m_oldSupportedPluginNames;
 
 public Q_SLOTS:
     void unpair();

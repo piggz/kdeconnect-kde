@@ -26,8 +26,10 @@
 
 #include "core/networkpackage.h"
 
+class PairingHandler;
 class NetworkPackage;
 class LinkProvider;
+class Device;
 
 class DeviceLink
     : public QObject
@@ -35,24 +37,42 @@ class DeviceLink
     Q_OBJECT
 
 public:
-    DeviceLink(const QString& deviceId, LinkProvider* parent);
-    virtual ~DeviceLink() { };
+    enum PairStatus { NotPaired, Paired };
 
-    const QString& deviceId() { return mDeviceId; }
-    LinkProvider* provider() { return mLinkProvider; }
+    DeviceLink(const QString& deviceId, LinkProvider* parent);
+    virtual ~DeviceLink() = default;
+
+    virtual QString name() = 0;
+
+    const QString& deviceId() const { return m_deviceId; }
+    LinkProvider* provider() { return m_linkProvider; }
 
     virtual bool sendPackage(NetworkPackage& np) = 0;
-    virtual bool sendPackageEncrypted(QCA::PublicKey& publicKey, NetworkPackage& np) = 0;
+
+    //user actions
+    virtual void userRequestsPair() = 0;
+    virtual void userRequestsUnpair() = 0;
+
+    PairStatus pairStatus() const { return m_pairStatus; }
+    virtual void setPairStatus(PairStatus status);
+
+    //The daemon will periodically destroy unpaired links if this returns false
+    virtual bool linkShouldBeKeptAlive() { return false; }
 
 Q_SIGNALS:
+    void pairingRequest(PairingHandler* handler);
+    void pairingRequestExpired(PairingHandler* handler);
+    void pairStatusChanged(DeviceLink::PairStatus status);
+    void pairingError(const QString& error);
     void receivedPackage(const NetworkPackage& np);
 
 protected:
-    QCA::PrivateKey mPrivateKey;
+    QCA::PrivateKey m_privateKey;
 
 private:
-    QString mDeviceId;
-    LinkProvider* mLinkProvider;
+    const QString m_deviceId;
+    LinkProvider* m_linkProvider;
+    PairStatus m_pairStatus;
 
 };
 

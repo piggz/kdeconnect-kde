@@ -34,7 +34,11 @@
 
 Q_LOGGING_CATEGORY(KDECONNECT_INTERFACES, "kdeconnect.interfaces");
 
-DevicesModel::DevicesModel(QObject *parent)
+static QString createId() { return QCoreApplication::instance()->applicationName()+QString::number(QCoreApplication::applicationPid()); }
+
+Q_GLOBAL_STATIC_WITH_ARGS(QString, s_keyId, (createId()));
+
+DevicesModel::DevicesModel(QObject* parent)
     : QAbstractListModel(parent)
     , m_dbusInterface(new DaemonDbusInterface(this))
     , m_displayFilter(StatusFilterFlag::NoFilter)
@@ -42,24 +46,25 @@ DevicesModel::DevicesModel(QObject *parent)
 
     //new ModelTest(this, this);
 
-    connect(this, SIGNAL(rowsRemoved(QModelIndex, int, int)),
-            this, SIGNAL(rowsChanged()));
-    connect(this, SIGNAL(rowsInserted(QModelIndex, int, int)),
-            this, SIGNAL(rowsChanged()));
+    connect(this, &QAbstractItemModel::rowsRemoved,
+            this, &DevicesModel::rowsChanged);
+    connect(this, &QAbstractItemModel::rowsInserted,
+            this, &DevicesModel::rowsChanged);
 
     connect(m_dbusInterface, SIGNAL(deviceAdded(QString)),
             this, SLOT(deviceAdded(QString)));
-    connect(m_dbusInterface, SIGNAL(deviceVisibilityChanged(QString,bool)),
-            this, SLOT(deviceUpdated(QString,bool)));
-    connect(m_dbusInterface, SIGNAL(deviceRemoved(QString)),
-            this, SLOT(deviceRemoved(QString)));
+    connect(m_dbusInterface, &OrgKdeKdeconnectDaemonInterface::deviceVisibilityChanged,
+            this, &DevicesModel::deviceUpdated);
+    connect(m_dbusInterface, &OrgKdeKdeconnectDaemonInterface::deviceRemoved,
+            this, &DevicesModel::deviceRemoved);
 
     QDBusServiceWatcher* watcher = new QDBusServiceWatcher(DaemonDbusInterface::activatedService(),
                                                            QDBusConnection::sessionBus(), QDBusServiceWatcher::WatchForOwnerChange, this);
     connect(watcher, &QDBusServiceWatcher::serviceRegistered, this, &DevicesModel::refreshDeviceList);
     connect(watcher, &QDBusServiceWatcher::serviceUnregistered, this, &DevicesModel::clearDevices);
 
-    refreshDeviceList();
+    //refresh the view, acquireDiscoveryMode if necessary
+    setDisplayFilter(NoFilter);
 }
 
 QHash< int, QByteArray > DevicesModel::roleNames() const
@@ -74,6 +79,7 @@ QHash< int, QByteArray > DevicesModel::roleNames() const
 
 DevicesModel::~DevicesModel()
 {
+    m_dbusInterface->releaseDiscoveryMode(*s_keyId);
 }
 
 int DevicesModel::rowForDevice(const QString& id) const
@@ -96,10 +102,7 @@ void DevicesModel::deviceAdded(const QString& id)
     DeviceDbusInterface* dev = new DeviceDbusInterface(id, this);
     Q_ASSERT(dev->isValid());
 
-    bool onlyPaired = (m_displayFilter & StatusFilterFlag::Paired);
-    bool onlyReachable = (m_displayFilter & StatusFilterFlag::Reachable);
-
-    if ((onlyReachable && !dev->isReachable()) || (onlyPaired && !dev->isPaired())) {
+    if (! passesFilter(dev)) {
         delete dev;
         return;
     }
@@ -121,21 +124,29 @@ void DevicesModel::deviceRemoved(const QString& id)
 
 void DevicesModel::deviceUpdated(const QString& id, bool isVisible)
 {
+    Q_UNUSED(isVisible);
     int row = rowForDevice(id);
 
-    if (row < 0 && isVisible) {
+    if (row < 0) {
         // FIXME: when m_dbusInterface is not valid refreshDeviceList() does
         // nothing and we can miss some devices.
         // Someone can reproduce this problem by restarting kdeconnectd while
         // kdeconnect's plasmoid is still running.
-        qCDebug(KDECONNECT_INTERFACES) << "Adding missing device" << id;
+        // Another reason for this branch is that we removed the device previously
+        // because of the filter settings.
+        qCDebug(KDECONNECT_INTERFACES) << "Adding missing or previously removed device" << id;
         deviceAdded(id);
-        row = rowForDevice(id);
-    }
-
-    if (row >= 0) {
-        const QModelIndex idx = index(row);
-        Q_EMIT dataChanged(idx, idx);
+    } else {
+        DeviceDbusInterface* dev = getDevice(row);
+        if (! passesFilter(dev)) {
+            beginRemoveRows(QModelIndex(), row, row);
+            delete m_deviceList.takeAt(row);
+            endRemoveRows();
+            qCDebug(KDECONNECT_INTERFACES) << "Removed changed device " << id;
+        } else {
+            const QModelIndex idx = index(row);
+            Q_EMIT dataChanged(idx, idx);
+        }
     }
 }
 
@@ -147,6 +158,13 @@ int DevicesModel::displayFilter() const
 void DevicesModel::setDisplayFilter(int flags)
 {
     m_displayFilter = (StatusFilterFlag)flags;
+
+    const bool reachableNeeded = (m_displayFilter & StatusFilterFlag::Reachable);
+    if (reachableNeeded)
+        m_dbusInterface->acquireDiscoveryMode(*s_keyId);
+    else
+        m_dbusInterface->releaseDiscoveryMode(*s_keyId);
+
     refreshDeviceList();
 }
 
@@ -162,10 +180,10 @@ void DevicesModel::refreshDeviceList()
     bool onlyReachable = (m_displayFilter & StatusFilterFlag::Reachable);
 
     QDBusPendingReply<QStringList> pendingDeviceIds = m_dbusInterface->devices(onlyReachable, onlyPaired);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingDeviceIds, this);
+    QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(pendingDeviceIds, this);
 
-    QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                     this, SLOT(receivedDeviceList(QDBusPendingCallWatcher*)));
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
+                     this, &DevicesModel::receivedDeviceList);
 }
 
 void DevicesModel::receivedDeviceList(QDBusPendingCallWatcher* watcher)
@@ -185,7 +203,7 @@ void DevicesModel::receivedDeviceList(QDBusPendingCallWatcher* watcher)
         return;
 
     beginInsertRows(QModelIndex(), 0, deviceIds.count()-1);
-    Q_FOREACH(const QString& id, deviceIds) {
+    for (const QString& id : deviceIds) {
         appendDevice(new DeviceDbusInterface(id, this));
     }
     endInsertRows();
@@ -194,7 +212,7 @@ void DevicesModel::receivedDeviceList(QDBusPendingCallWatcher* watcher)
 void DevicesModel::appendDevice(DeviceDbusInterface* dev)
 {
     m_deviceList.append(dev);
-    connect(dev, SIGNAL(nameChanged(QString)), SLOT(nameChanged(QString)));
+    connect(dev, &OrgKdeKdeconnectDeviceInterface::nameChanged, this, &DevicesModel::nameChanged);
 }
 
 void DevicesModel::nameChanged(const QString& newName)
@@ -233,6 +251,8 @@ QVariant DevicesModel::data(const QModelIndex& index, int role) const
 
     //This function gets called lots of times, producing lots of dbus calls. Add a cache?
     switch (role) {
+        case Qt::SizeHintRole:
+            return QSize(0, 32);
         case IconModelRole: {
             QString icon = data(index, IconNameRole).toString();
             return QIcon::fromTheme(icon);
@@ -242,16 +262,18 @@ QVariant DevicesModel::data(const QModelIndex& index, int role) const
         case NameModelRole:
             return device->name();
         case Qt::ToolTipRole: {
-            bool paired = device->isPaired();
+            bool trusted = device->isTrusted();
             bool reachable = device->isReachable();
-            QString status = reachable? (paired? i18n("Device trusted and connected") : i18n("Device not trusted")) : i18n("Device disconnected");
+            QString status = reachable? (trusted? i18n("Device trusted and connected") : i18n("Device not trusted")) : i18n("Device disconnected");
             return status;
         }
         case StatusModelRole: {
             int status = StatusFilterFlag::NoFilter;
             if (device->isReachable()) {
                 status |= StatusFilterFlag::Reachable;
-                if (device->isPaired()) status |= StatusFilterFlag::Paired;
+            }
+            if (device->isTrusted()) {
+                status |= StatusFilterFlag::Paired;
             }
             return status;
         }
@@ -267,7 +289,7 @@ QVariant DevicesModel::data(const QModelIndex& index, int role) const
 DeviceDbusInterface* DevicesModel::getDevice(int row) const
 {
     if (row < 0 || row >= m_deviceList.size()) {
-        return NULL;
+        return nullptr;
     }
 
     return m_deviceList[row];
@@ -281,4 +303,12 @@ int DevicesModel::rowCount(const QModelIndex& parent) const
     }
 
     return m_deviceList.size();
+}
+
+bool DevicesModel::passesFilter(DeviceDbusInterface* dev) const
+{
+    bool onlyPaired = (m_displayFilter & StatusFilterFlag::Paired);
+    bool onlyReachable = (m_displayFilter & StatusFilterFlag::Reachable);
+
+    return !((onlyReachable && !dev->isReachable()) || (onlyPaired && !dev->isTrusted()));
 }

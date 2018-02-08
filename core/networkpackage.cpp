@@ -27,7 +27,6 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QJsonDocument>
-#include <QtCrypto>
 #include <QDebug>
 
 #include "dbushelper.h"
@@ -35,43 +34,52 @@
 #include "pluginloader.h"
 #include "kdeconnectconfig.h"
 
-const QCA::EncryptionAlgorithm NetworkPackage::EncryptionAlgorithm = QCA::EME_PKCS1v15;
-const int NetworkPackage::ProtocolVersion = 5;
-
-NetworkPackage::NetworkPackage(const QString& type)
+QDebug operator<<(QDebug s, const NetworkPackage& pkg)
 {
-    mId = QString::number(QDateTime::currentMSecsSinceEpoch());
-    mType = type;
-    mBody = QVariantMap();
-    mPayload = QSharedPointer<QIODevice>();
-    mPayloadSize = 0;
+    s.nospace() << "NetworkPackage(" << pkg.type() << ':' << pkg.body();
+    if (pkg.hasPayload()) {
+        s.nospace() << ":withpayload";
+    }
+    s.nospace() << ')';
+    return s.space();
+}
+
+const int NetworkPackage::s_protocolVersion = 7;
+
+NetworkPackage::NetworkPackage(const QString& type, const QVariantMap& body)
+    : m_id(QString::number(QDateTime::currentMSecsSinceEpoch()))
+    , m_type(type)
+    , m_body(body)
+    , m_payload()
+    , m_payloadSize(0)
+{
 }
 
 void NetworkPackage::createIdentityPackage(NetworkPackage* np)
 {
     KdeConnectConfig* config = KdeConnectConfig::instance();
-    const QString id = config->deviceId();
-    np->mId = QString::number(QDateTime::currentMSecsSinceEpoch());
-    np->mType = PACKAGE_TYPE_IDENTITY;
-    np->mPayload = QSharedPointer<QIODevice>();
-    np->mPayloadSize = 0;
-    np->set("deviceId", id);
-    np->set("deviceName", config->name());
-    np->set("deviceType", config->deviceType());
-    np->set("protocolVersion",  NetworkPackage::ProtocolVersion);
-    np->set("SupportedIncomingInterfaces", PluginLoader::instance()->incomingInterfaces().join(","));
-    np->set("SupportedOutgoingInterfaces", PluginLoader::instance()->outgoingInterfaces().join(","));
+    np->m_id = QString::number(QDateTime::currentMSecsSinceEpoch());
+    np->m_type = PACKAGE_TYPE_IDENTITY;
+    np->m_payload = QSharedPointer<QIODevice>();
+    np->m_payloadSize = 0;
+    np->set(QStringLiteral("deviceId"), config->deviceId());
+    np->set(QStringLiteral("deviceName"), config->name());
+    np->set(QStringLiteral("deviceType"), config->deviceType());
+    np->set(QStringLiteral("protocolVersion"),  NetworkPackage::s_protocolVersion);
+    np->set(QStringLiteral("incomingCapabilities"), PluginLoader::instance()->incomingCapabilities());
+    np->set(QStringLiteral("outgoingCapabilities"), PluginLoader::instance()->outgoingCapabilities());
 
     //qCDebug(KDECONNECT_CORE) << "createIdentityPackage" << np->serialize();
 }
 
-QVariantMap qobject2qvariant(const QObject* object)
+template<class T>
+QVariantMap qobject2qvariant(const T* object)
 {
     QVariantMap map;
-    auto metaObject = object->metaObject();
-    for(int i = metaObject->propertyOffset(); i < metaObject->propertyCount(); ++i) {
-        const char *name = metaObject->property(i).name();
-        map.insert(QString::fromLatin1(name), object->property(name));
+    auto metaObject = T::staticMetaObject;
+    for(int i = metaObject.propertyOffset(); i < metaObject.propertyCount(); ++i) {
+        QMetaProperty prop = metaObject.property(i);
+        map.insert(QString::fromLatin1(prop.name()), prop.readOnGadget(object));
     }
 
     return map;
@@ -88,8 +96,8 @@ QByteArray NetworkPackage::serialize() const
 
     if (hasPayload()) {
         //qCDebug(KDECONNECT_CORE) << "Serializing payloadTransferInfo";
-        variant["payloadSize"] = payloadSize();
-        variant["payloadTransferInfo"] = mPayloadTransferInfo;
+        variant[QStringLiteral("payloadSize")] = payloadSize();
+        variant[QStringLiteral("payloadTransferInfo")] = m_payloadTransferInfo;
     }
 
     //QVariant -> json
@@ -98,27 +106,28 @@ QByteArray NetworkPackage::serialize() const
     if (json.isEmpty()) {
         qCDebug(KDECONNECT_CORE) << "Serialization error:";
     } else {
-        if (!isEncrypted()) {
+        /*if (!isEncrypted()) {
             //qCDebug(KDECONNECT_CORE) << "Serialized package:" << json;
-        }
+        }*/
         json.append('\n');
     }
 
     return json;
 }
 
-void qvariant2qobject(const QVariantMap& variant, QObject* object)
+template <class T>
+void qvariant2qobject(const QVariantMap& variant, T* object)
 {
     for ( QVariantMap::const_iterator iter = variant.begin(); iter != variant.end(); ++iter )
     {
-        const int propertyIndex = object->metaObject()->indexOfProperty(iter.key().toLatin1());
+        const int propertyIndex = T::staticMetaObject.indexOfProperty(iter.key().toLatin1());
         if (propertyIndex < 0) {
             qCWarning(KDECONNECT_CORE) << "missing property" << object << iter.key();
             continue;
         }
 
-        QMetaProperty property = object->metaObject()->property(propertyIndex);
-        bool ret = property.write(object, *iter);
+        QMetaProperty property = T::staticMetaObject.property(propertyIndex);
+        bool ret = property.writeOnGadget(object, *iter);
         if (!ret) {
             qCWarning(KDECONNECT_CORE) << "couldn't set" << object << "->" << property.name() << '=' << *iter;
         }
@@ -138,83 +147,25 @@ bool NetworkPackage::unserialize(const QByteArray& a, NetworkPackage* np)
     auto variant = parser.toVariant().toMap();
     qvariant2qobject(variant, np);
 
-    if (!np->isEncrypted()) {
-        //qCDebug(KDECONNECT_CORE) << "Unserialized: " << a;
+    np->m_payloadSize = variant[QStringLiteral("payloadSize")].toInt(); //Will return 0 if was not present, which is ok
+    if (np->m_payloadSize == -1) {
+        np->m_payloadSize = np->get<int>(QStringLiteral("size"), -1);
     }
-
-    np->mPayloadSize = variant["payloadSize"].toInt(); //Will return 0 if was not present, which is ok
-    if (np->mPayloadSize == -1) {
-        np->mPayloadSize = np->get<int>("size", -1);
-    }
-    np->mPayloadTransferInfo = variant["payloadTransferInfo"].toMap(); //Will return an empty qvariantmap if was not present, which is ok
+    np->m_payloadTransferInfo = variant[QStringLiteral("payloadTransferInfo")].toMap(); //Will return an empty qvariantmap if was not present, which is ok
 
     //Ids containing characters that are not allowed as dbus paths would make app crash
-    if (np->mBody.contains("deviceId"))
+    if (np->m_body.contains(QStringLiteral("deviceId")))
     {
-        QString deviceId = np->get<QString>("deviceId");
+        QString deviceId = np->get<QString>(QStringLiteral("deviceId"));
         DbusHelper::filterNonExportableCharacters(deviceId);
-        np->set("deviceId", deviceId);
+        np->set(QStringLiteral("deviceId"), deviceId);
     }
 
     return true;
 
 }
 
-void NetworkPackage::encrypt(QCA::PublicKey& key)
-{
-
-    QByteArray serialized = serialize();
-
-    int chunkSize = key.maximumEncryptSize(NetworkPackage::EncryptionAlgorithm);
-
-    QStringList chunks;
-    while (!serialized.isEmpty()) {
-        const QByteArray chunk = serialized.left(chunkSize);
-        serialized = serialized.mid(chunkSize);
-        const QByteArray encryptedChunk = key.encrypt(chunk, NetworkPackage::EncryptionAlgorithm).toByteArray();
-        chunks.append( encryptedChunk.toBase64() );
-    }
-
-    //qCDebug(KDECONNECT_CORE) << chunks.size() << "chunks";
-
-    mId = QString::number(QDateTime::currentMSecsSinceEpoch());
-    mType = PACKAGE_TYPE_ENCRYPTED;
-    mBody = QVariantMap();
-    mBody["data"] = chunks;
-
-}
-
-bool NetworkPackage::decrypt(QCA::PrivateKey& key, NetworkPackage* out) const
-{
-
-    const QStringList chunks = mBody["data"].toStringList();
-
-    QByteArray decryptedJson;
-    Q_FOREACH(const QString& chunk, chunks) {
-        const QByteArray encryptedChunk = QByteArray::fromBase64(chunk.toLatin1());
-        QCA::SecureArray decryptedChunk;
-        bool success = key.decrypt(encryptedChunk, &decryptedChunk, NetworkPackage::EncryptionAlgorithm);
-        if (!success) {
-            return false;
-        }
-        decryptedJson.append(decryptedChunk.toByteArray());
-    }
-
-    bool success = unserialize(decryptedJson, out);
-
-    if (!success) {
-        return false;
-    }
-
-    if (hasPayload()) {
-        out->mPayload = mPayload;
-    }
-
-    return true;
-
-}
-
-FileTransferJob* NetworkPackage::createPayloadTransferJob(const QUrl &destination) const
+FileTransferJob* NetworkPackage::createPayloadTransferJob(const QUrl& destination) const
 {
     return new FileTransferJob(payload(), payloadSize(), destination);
 }

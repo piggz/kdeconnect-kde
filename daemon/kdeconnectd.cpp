@@ -18,13 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/socket.h>
-#include <unistd.h>
-#include <signal.h>
-
-#include <QSocketNotifier>
 #include <QApplication>
 #include <QNetworkAccessManager>
+#include <QTimer>
 
 #include <KDBusService>
 #include <KNotification>
@@ -33,34 +29,8 @@
 
 #include "core/daemon.h"
 #include "core/device.h"
+#include "core/backends/pairinghandler.h"
 #include "kdeconnect-version.h"
-
-static int sigtermfd[2];
-const static char deadbeef = 1;
-struct sigaction action;
-
-void sighandler(int signum)
-{
-    if( signum == SIGTERM || signum == SIGINT)
-    {
-        ssize_t unused = ::write(sigtermfd[0], &deadbeef, sizeof(deadbeef));
-        Q_UNUSED(unused);
-    }
-}
-
-void initializeTermHandlers(QCoreApplication* app, Daemon* daemon)
-{
-    ::socketpair(AF_UNIX, SOCK_STREAM, 0, sigtermfd);
-    QSocketNotifier* snTerm = new QSocketNotifier(sigtermfd[1], QSocketNotifier::Read, app);
-    QObject::connect(snTerm, SIGNAL(activated(int)), daemon, SLOT(deleteLater()));
-
-    action.sa_handler = sighandler;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
-}
 
 class DesktopDaemon : public Daemon
 {
@@ -72,25 +42,25 @@ public:
         , m_nam(Q_NULLPTR)
     {}
 
-    void requestPairing(Device* d) Q_DECL_OVERRIDE
+    void askPairingConfirmation(Device* device) override
     {
-        KNotification* notification = new KNotification("pairingRequest");
+        KNotification* notification = new KNotification(QStringLiteral("pairingRequest"));
         notification->setIconName(QStringLiteral("dialog-information"));
-        notification->setComponentName("kdeconnect");
-        notification->setText(i18n("Pairing request from %1", d->name()));
+        notification->setComponentName(QStringLiteral("kdeconnect"));
+        notification->setText(i18n("Pairing request from %1", device->name().toHtmlEscaped()));
         notification->setActions(QStringList() << i18n("Accept") << i18n("Reject"));
-        connect(notification, &KNotification::ignored, d, &Device::rejectPairing);
-        connect(notification, &KNotification::action1Activated, d, &Device::acceptPairing);
-        connect(notification, &KNotification::action2Activated, d, &Device::rejectPairing);
+//         notification->setTimeout(PairingHandler::pairingTimeoutMsec());
+        connect(notification, &KNotification::action1Activated, device, &Device::acceptPairing);
+        connect(notification, &KNotification::action2Activated, device, &Device::rejectPairing);
         notification->sendEvent();
     }
 
-    void reportError(const QString & title, const QString & description) Q_DECL_OVERRIDE
+    void reportError(const QString & title, const QString & description) override
     {
         KNotification::event(KNotification::Error, title, description);
     }
 
-    QNetworkAccessManager* networkAccessManager() Q_DECL_OVERRIDE
+    QNetworkAccessManager* networkAccessManager() override
     {
         if (!m_nam) {
             m_nam = new KIO::AccessManager(this);
@@ -105,16 +75,15 @@ private:
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    app.setApplicationName("kdeconnectd");
-    app.setApplicationVersion(QLatin1String(KDECONNECT_VERSION_STRING));
-    app.setOrganizationDomain("kde.org");
+    app.setApplicationName(QStringLiteral("kdeconnectd"));
+    app.setApplicationVersion(QStringLiteral(KDECONNECT_VERSION_STRING));
+    app.setOrganizationDomain(QStringLiteral("kde.org"));
     app.setQuitOnLastWindowClosed(false);
 
     KDBusService dbusService(KDBusService::Unique);
 
     Daemon* daemon = new DesktopDaemon;
     QObject::connect(daemon, SIGNAL(destroyed(QObject*)), &app, SLOT(quit()));
-    initializeTermHandlers(&app, daemon);
 
     return app.exec();
 }

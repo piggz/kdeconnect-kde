@@ -31,12 +31,11 @@ class Q_DECL_EXPORT ScreensaverInhibitPlugin
     Q_OBJECT
 
 public:
-    explicit ScreensaverInhibitPlugin(QObject *parent, const QVariantList &args);
-    virtual ~ScreensaverInhibitPlugin();
+    explicit ScreensaverInhibitPlugin(QObject* parent, const QVariantList& args);
+    ~ScreensaverInhibitPlugin() override;
 
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override;
 
 private:
     uint inhibitCookie;

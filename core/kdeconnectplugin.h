@@ -38,7 +38,7 @@ class KDECONNECTCORE_EXPORT KdeConnectPlugin
 
 public:
     KdeConnectPlugin(QObject* parent, const QVariantList& args);
-    virtual ~KdeConnectPlugin();
+    ~KdeConnectPlugin() override;
 
     const Device* device();
     Device const* device() const;
@@ -46,6 +46,8 @@ public:
     bool sendPackage(NetworkPackage& np) const;
 
     KdeConnectPluginConfig* config() const;
+
+    virtual QString dbusPath() const;
 
 public Q_SLOTS:
     /**

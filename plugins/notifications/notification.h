@@ -23,6 +23,8 @@
 
 #include <QObject>
 #include <QString>
+#include <KNotification>
+#include <QDir>
 
 #include <core/networkpackage.h>
 
@@ -34,32 +36,64 @@ class Notification
     Q_PROPERTY(QString internalId READ internalId)
     Q_PROPERTY(QString appName READ appName)
     Q_PROPERTY(QString ticker READ ticker)
+    Q_PROPERTY(QString title READ title)
+    Q_PROPERTY(QString text READ text)
     Q_PROPERTY(QString iconPath READ iconPath)
     Q_PROPERTY(bool dismissable READ dismissable)
+    Q_PROPERTY(bool hasIcon READ hasIcon)
+    Q_PROPERTY(bool silent READ silent)
+    Q_PROPERTY(QString replyId READ replyId)
 
 public:
-    Notification(const NetworkPackage& np, const QString& iconPath, QObject* parent);
-    virtual ~Notification();
+    Notification(const NetworkPackage& np, QObject* parent);
+    ~Notification() override;
 
-    QString internalId() const { return mId; }
-    QString appName() const { return mAppName; }
-    QString ticker() const { return mTicker; }
-    QString iconPath() const { return mIconPath; }
-    bool dismissable() const { return mDismissable; }
+    QString internalId() const { return m_internalId; }
+    QString appName() const { return m_appName; }
+    QString ticker() const { return m_ticker; }
+    QString title() const { return m_title; }
+    QString text() const { return m_text; }
+    QString iconPath() const { return m_iconPath; }
+    bool dismissable() const { return m_dismissable; }
+    QString replyId() const { return m_requestReplyId; }
+    bool hasIcon() const { return m_hasIcon; }
+    void show();
+    bool silent() const { return m_silent; }
+    void update(const NetworkPackage& np);
+    bool isReady() const { return m_ready; }
+    KNotification* createKNotification(bool update, const NetworkPackage& np);
 
 public Q_SLOTS:
     Q_SCRIPTABLE void dismiss();
+    Q_SCRIPTABLE void reply();
+    void closed();
 
-Q_SIGNALS:
-    void dismissRequested(Notification* self);
+    Q_SIGNALS:
+    void dismissRequested(const QString& m_internalId);
+    void replyRequested();
+    void ready();
 
 private:
-    QString mId;
-    QString mAppName;
-    QString mTicker;
-    QString mIconPath;
-    bool mDismissable;
+    QString m_internalId;
+    QString m_appName;
+    QString m_ticker;
+    QString m_title;
+    QString m_text;
+    QString m_iconPath;
+    QString m_requestReplyId;
+    bool m_dismissable;
+    bool m_hasIcon;
+    KNotification* m_notification;
+    QDir m_imagesDir;
+    bool m_silent;
+    bool m_closed;
+    QString m_payloadHash;
+    bool m_ready;
 
+    void parseNetworkPackage(const NetworkPackage& np);
+    void loadIcon(const NetworkPackage& np);
+    void applyIcon();
+    void applyNoIcon();
 };
 
 #endif

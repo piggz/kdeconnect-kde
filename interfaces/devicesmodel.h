@@ -47,27 +47,30 @@ public:
         IconNameRole,
         DeviceRole
     };
-    Q_ENUMS(ModelRoles);
+    Q_ENUM(ModelRoles);
+
+    // A device is always paired or reachable or both
+    // You can combine the Paired and Reachable flags
     enum StatusFilterFlag {
         NoFilter   = 0x00,
-        Paired     = 0x01,
-        Reachable  = 0x02
+        Paired     = 0x01, // show device only if it's paired
+        Reachable  = 0x02  // show device only if it's reachable
     };
     Q_DECLARE_FLAGS(StatusFilterFlags, StatusFilterFlag)
     Q_FLAGS(StatusFilterFlags)
-    Q_ENUMS(StatusFilterFlag)
+    Q_ENUM(StatusFilterFlag)
 
-    DevicesModel(QObject *parent = 0);
-    virtual ~DevicesModel();
+    explicit DevicesModel(QObject* parent = nullptr);
+    ~DevicesModel() override;
 
     void setDisplayFilter(int flags);
     int displayFilter() const;
 
-    virtual QVariant data(const QModelIndex& index, int role) const;
-    virtual int rowCount(const QModelIndex& parent = QModelIndex()) const;
+    QVariant data(const QModelIndex& index, int role) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
     Q_SCRIPTABLE DeviceDbusInterface* getDevice(int row) const;
-    virtual QHash<int, QByteArray> roleNames() const;
+    QHash<int, QByteArray> roleNames() const override;
 
 private Q_SLOTS:
     void deviceAdded(const QString& id);
@@ -84,6 +87,7 @@ private:
     int rowForDevice(const QString& id) const;
     void clearDevices();
     void appendDevice(DeviceDbusInterface* dev);
+    bool passesFilter(DeviceDbusInterface* dev) const;
 
     DaemonDbusInterface* m_dbusInterface;
     QVector<DeviceDbusInterface*> m_deviceList;

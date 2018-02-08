@@ -21,15 +21,18 @@
 #include "dbusinterfaces.h"
 
 QString DaemonDbusInterface::activatedService() {
-    static const QString service = "org.kde.kdeconnect";
-    QDBusConnection::sessionBus().interface()->startService(service);
+    static const QString service = QStringLiteral("org.kde.kdeconnect");
+    auto reply = QDBusConnection::sessionBus().interface()->startService(service);
+    if (!reply.isValid()) {
+        qWarning() << "error activating kdeconnectd:" << QDBusConnection::sessionBus().interface()->lastError();
+    }
     return service;
 }
 
 DaemonDbusInterface::DaemonDbusInterface(QObject* parent)
-    : OrgKdeKdeconnectDaemonInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect", QDBusConnection::sessionBus(), parent)
+    : OrgKdeKdeconnectDaemonInterface(DaemonDbusInterface::activatedService(), QStringLiteral("/modules/kdeconnect"), QDBusConnection::sessionBus(), parent)
 {
-
+    connect(this, &OrgKdeKdeconnectDaemonInterface::pairingRequestsChanged, this, &DaemonDbusInterface::pairingRequestsChangedProxy);
 }
 
 DaemonDbusInterface::~DaemonDbusInterface()
@@ -41,7 +44,10 @@ DeviceDbusInterface::DeviceDbusInterface(const QString& id, QObject* parent)
     : OrgKdeKdeconnectDeviceInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect/devices/"+id, QDBusConnection::sessionBus(), parent)
     , m_id(id)
 {
-    connect(this, &OrgKdeKdeconnectDeviceInterface::pairingChanged, this, &DeviceDbusInterface::pairingChangedProxy);
+    connect(this, &OrgKdeKdeconnectDeviceInterface::trustedChanged, this, &DeviceDbusInterface::trustedChangedProxy);
+    connect(this, &OrgKdeKdeconnectDeviceInterface::reachableChanged, this, &DeviceDbusInterface::reachableChangedProxy);
+    connect(this, &OrgKdeKdeconnectDeviceInterface::nameChanged, this, &DeviceDbusInterface::nameChangedProxy);
+    connect(this, &OrgKdeKdeconnectDeviceInterface::hasPairingRequestsChanged, this, &DeviceDbusInterface::hasPairingRequestsChangedProxy);
 }
 
 DeviceDbusInterface::~DeviceDbusInterface()
@@ -54,9 +60,9 @@ QString DeviceDbusInterface::id() const
     return m_id;
 }
 
-void DeviceDbusInterface::pluginCall(const QString &plugin, const QString &method)
+void DeviceDbusInterface::pluginCall(const QString& plugin, const QString& method)
 {
-    QDBusMessage msg = QDBusMessage::createMethodCall("org.kde.kdeconnect", "/modules/kdeconnect/devices/"+id()+'/'+plugin, "org.kde.kdeconnect.device."+plugin, method);
+    QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.kdeconnect"), "/modules/kdeconnect/devices/"+id()+'/'+plugin, "org.kde.kdeconnect.device."+plugin, method);
     QDBusConnection::sessionBus().asyncCall(msg);
 }
 
@@ -84,6 +90,7 @@ DeviceNotificationsDbusInterface::~DeviceNotificationsDbusInterface()
 
 NotificationDbusInterface::NotificationDbusInterface(const QString& deviceId, const QString& notificationId, QObject* parent)
     : OrgKdeKdeconnectDeviceNotificationsNotificationInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect/devices/"+deviceId+"/notifications/"+notificationId, QDBusConnection::sessionBus(), parent)
+    , id(notificationId)
 {
 
 }
@@ -133,5 +140,29 @@ LockDeviceDbusInterface::LockDeviceDbusInterface(const QString& id, QObject* par
 LockDeviceDbusInterface::~LockDeviceDbusInterface()
 {
 }
+
+FindMyPhoneDeviceDbusInterface::FindMyPhoneDeviceDbusInterface(const QString& deviceId, QObject* parent):
+    OrgKdeKdeconnectDeviceFindmyphoneInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect/devices/" + deviceId + "/findmyphone", QDBusConnection::sessionBus(), parent)
+{
+}
+
+FindMyPhoneDeviceDbusInterface::~FindMyPhoneDeviceDbusInterface()
+{
+}
+
+RemoteCommandsDbusInterface::RemoteCommandsDbusInterface(const QString& deviceId, QObject* parent):
+    OrgKdeKdeconnectDeviceRemotecommandsInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect/devices/" + deviceId + "/remotecommands", QDBusConnection::sessionBus(), parent)
+{
+}
+
+RemoteCommandsDbusInterface::~RemoteCommandsDbusInterface() = default;
+
+RemoteKeyboardDbusInterface::RemoteKeyboardDbusInterface(const QString& deviceId, QObject* parent):
+    OrgKdeKdeconnectDeviceRemotekeyboardInterface(DaemonDbusInterface::activatedService(), "/modules/kdeconnect/devices/" + deviceId + "/remotekeyboard", QDBusConnection::sessionBus(), parent)
+{
+    connect(this, &OrgKdeKdeconnectDeviceRemotekeyboardInterface::remoteStateChanged, this, &RemoteKeyboardDbusInterface::remoteStateChanged);
+}
+
+RemoteKeyboardDbusInterface::~RemoteKeyboardDbusInterface() = default;
 
 #include "dbusinterfaces.moc"

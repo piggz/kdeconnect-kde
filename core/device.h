@@ -25,11 +25,10 @@
 #include <QString>
 #include <QVector>
 #include <QSet>
-#include <QSslKey>
-#include <QTimer>
-#include <QtCrypto>
+#include <QHostAddress>
 
 #include "networkpackage.h"
+#include "backends/devicelink.h"
 
 class DeviceLink;
 class KdeConnectPlugin;
@@ -43,15 +42,12 @@ class KDECONNECTCORE_EXPORT Device
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString iconName READ iconName CONSTANT)
     Q_PROPERTY(QString statusIconName READ statusIconName)
-    Q_PROPERTY(bool isReachable READ isReachable NOTIFY reachableStatusChanged)
-    Q_PROPERTY(bool isPaired READ isPaired NOTIFY pairingChanged)
+    Q_PROPERTY(bool isReachable READ isReachable NOTIFY reachableChanged)
+    Q_PROPERTY(bool isTrusted READ isTrusted NOTIFY trustedChanged)
+    Q_PROPERTY(QStringList supportedPlugins READ supportedPlugins NOTIFY pluginsChanged)
+    Q_PROPERTY(bool hasPairingRequests READ hasPairingRequests NOTIFY hasPairingRequestsChanged)
 
-    enum PairStatus {
-        NotPaired,
-        Requested,
-        RequestedByPeer,
-        Paired,
-    };
+public:
 
     enum DeviceType {
         Unknown,
@@ -60,10 +56,7 @@ class KDECONNECTCORE_EXPORT Device
         Phone,
         Tablet,
     };
-    static DeviceType str2type(QString deviceType);
-    static QString type2str(DeviceType deviceType);
 
-public:
     /**
      * Restores the @p device from the saved configuration
      *
@@ -78,21 +71,21 @@ public:
      */
     Device(QObject* parent, const NetworkPackage& np, DeviceLink* dl);
 
-    virtual ~Device();
+    ~Device() override;
 
     QString id() const { return m_deviceId; }
     QString name() const { return m_deviceName; }
     QString dbusPath() const { return "/modules/kdeconnect/devices/"+id(); }
-    QString type() const { return type2str(m_deviceType); };
+    QString type() const { return type2str(m_deviceType); }
     QString iconName() const;
     QString statusIconName() const;
+    Q_SCRIPTABLE QString encryptionInfo() const;
 
     //Add and remove links
     void addLink(const NetworkPackage& identityPackage, DeviceLink*);
     void removeLink(DeviceLink*);
 
-    Q_SCRIPTABLE bool isPaired() const { return m_pairStatus==Device::Paired; }
-    Q_SCRIPTABLE bool pairRequested() const { return m_pairStatus==Device::Requested; }
+    Q_SCRIPTABLE bool isTrusted() const;
 
     Q_SCRIPTABLE QStringList availableLinks() const;
     bool isReachable() const { return !m_deviceLinks.isEmpty(); }
@@ -102,57 +95,68 @@ public:
 
     Q_SCRIPTABLE QString pluginsConfigFile() const;
 
+    KdeConnectPlugin* plugin(const QString& pluginName) const;
+    Q_SCRIPTABLE void setPluginEnabled(const QString& pluginName, bool enabled);
+    Q_SCRIPTABLE bool isPluginEnabled(const QString& pluginName) const;
+
+    void cleanUnneededLinks();
+
+    int protocolVersion() { return m_protocolVersion; }
+    QStringList supportedPlugins() const { return m_supportedPlugins.toList(); }
+
+    QHostAddress getLocalIpAddress() const;
+
 public Q_SLOTS:
     ///sends a @p np package to the device
+    ///virtual for testing purposes.
     virtual bool sendPackage(NetworkPackage& np);
 
     //Dbus operations
 public Q_SLOTS:
-    Q_SCRIPTABLE void requestPair();
-    Q_SCRIPTABLE void unpair();
-    Q_SCRIPTABLE void reloadPlugins(); //From kconf
-    void acceptPairing();
-    void rejectPairing();
+    Q_SCRIPTABLE void requestPair(); //to all links
+    Q_SCRIPTABLE void unpair(); //from all links
+    Q_SCRIPTABLE void reloadPlugins(); //from kconf
+
+    Q_SCRIPTABLE void acceptPairing();
+    Q_SCRIPTABLE void rejectPairing();
+    Q_SCRIPTABLE bool hasPairingRequests() const;
 
 private Q_SLOTS:
     void privateReceivedPackage(const NetworkPackage& np);
     void linkDestroyed(QObject* o);
-    void pairingTimeout();
+    void pairStatusChanged(DeviceLink::PairStatus current);
+    void addPairingRequest(PairingHandler* handler);
+    void removePairingRequest(PairingHandler* handler);
 
 Q_SIGNALS:
     Q_SCRIPTABLE void pluginsChanged();
-    Q_SCRIPTABLE void reachableStatusChanged();
-    Q_SCRIPTABLE void pairingChanged(bool paired);
-    Q_SCRIPTABLE void pairingFailed(const QString& error);
+    Q_SCRIPTABLE void reachableChanged(bool reachable);
+    Q_SCRIPTABLE void trustedChanged(bool trusted);
+    Q_SCRIPTABLE void pairingError(const QString& error);
     Q_SCRIPTABLE void nameChanged(const QString& name);
 
-    QT_DEPRECATED Q_SCRIPTABLE void pairingSuccesful();
-    QT_DEPRECATED Q_SCRIPTABLE void unpaired();
+    Q_SCRIPTABLE void hasPairingRequestsChanged(bool hasPairingRequests);
 
 private: //Methods
-    void setName(const QString &name);
+    static DeviceType str2type(const QString& deviceType);
+    static QString type2str(DeviceType deviceType);
+
+    void setName(const QString& name);
     QString iconForStatus(bool reachable, bool paired) const;
-    void unpairInternal();
-    void setAsPaired();
-    bool sendOwnPublicKey();
 
 private: //Fields (TODO: dPointer!)
     const QString m_deviceId;
     QString m_deviceName;
     DeviceType m_deviceType;
-    QCA::PublicKey m_publicKey;
-    PairStatus m_pairStatus;
     int m_protocolVersion;
 
     QVector<DeviceLink*> m_deviceLinks;
     QHash<QString, KdeConnectPlugin*> m_plugins;
-    QMultiMap<QString, KdeConnectPlugin*> m_pluginsByIncomingInterface;
-    QMultiMap<QString, KdeConnectPlugin*> m_pluginsByOutgoingInterface;
 
-    QTimer m_pairingTimeut;
-    const QSet<QString> m_incomingCapabilities;
-    const QSet<QString> m_outgoingCapabilities;
-
+    //Capabilities stuff
+    QMultiMap<QString, KdeConnectPlugin*> m_pluginsByIncomingCapability;
+    QSet<QString> m_supportedPlugins;
+    QSet<PairingHandler*> m_pairRequests;
 };
 
 Q_DECLARE_METATYPE(Device*)

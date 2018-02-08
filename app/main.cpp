@@ -23,11 +23,11 @@
 #include <KAboutData>
 #include <KLocalizedString>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    KAboutData aboutData("kdeconnect-kde", i18n("Awesome App"), "1.0", i18n("KDE Connect App"), KAboutLicense::GPL, i18n("(c) 2015, Aleix Pol Gonzalez"));
-    aboutData.addAuthor(i18n("Aleix Pol Gonzalez"), i18n("Maintainer"), "aleixpol@kde.org");
+    KAboutData aboutData(QStringLiteral("kdeconnect.app"), i18n("KDE Connect App"), QStringLiteral("1.0"), i18n("KDE Connect App"), KAboutLicense::GPL, i18n("(c) 2015, Aleix Pol Gonzalez"));
+    aboutData.addAuthor(i18n("Aleix Pol Gonzalez"), i18n("Maintainer"), QStringLiteral("aleixpol@kde.org"));
     KAboutData::setApplicationData(aboutData);
 
     {
@@ -39,11 +39,13 @@ int main(int argc, char *argv[])
         aboutData.processCommandLine(&parser);
     }
  
-    QQmlApplicationEngine engine(QUrl("qrc:/qml/main.qml"));
+    QQmlApplicationEngine engine;
 
     KDeclarative::KDeclarative kdeclarative;
     kdeclarative.setDeclarativeEngine(&engine);
     kdeclarative.setupBindings();
+
+    engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
     return app.exec();
 }

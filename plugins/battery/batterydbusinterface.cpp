@@ -26,10 +26,10 @@
 
 QMap<QString, BatteryDbusInterface *> BatteryDbusInterface::s_dbusInterfaces;
 
-BatteryDbusInterface::BatteryDbusInterface(const Device *device)
+BatteryDbusInterface::BatteryDbusInterface(const Device* device)
     : QDBusAbstractAdaptor(const_cast<Device*>(device))
-	, mCharge(-1)
-	, mIsCharging(false)
+	, m_charge(-1)
+	, m_isCharging(false)
 {
     // FIXME: Workaround to prevent memory leak.
     // This makes the old BatteryDdbusInterface be deleted only after the new one is
@@ -37,8 +37,10 @@ BatteryDbusInterface::BatteryDbusInterface(const Device *device)
     // destructor.
     QMap<QString, BatteryDbusInterface *>::iterator oldInterfaceIter = s_dbusInterfaces.find(device->id());
     if (oldInterfaceIter != s_dbusInterfaces.end()) {
-        qCDebug(KDECONNECT_PLUGIN_BATTERY) << "Deleting stale BattteryDbusInterface for" << device->name();
-        oldInterfaceIter.value()->deleteLater();
+        qCDebug(KDECONNECT_PLUGIN_BATTERY) << "Deleting stale BatteryDbusInterface for" << device->name();
+        //FIXME: This still crashes sometimes even after the workaround made in 38aa970, commented out by now
+        //oldInterfaceIter.value()->deleteLater();
+        s_dbusInterfaces.erase(oldInterfaceIter);
     }
 
     s_dbusInterfaces[device->id()] = this;
@@ -51,11 +53,11 @@ BatteryDbusInterface::~BatteryDbusInterface()
 
 void BatteryDbusInterface::updateValues(bool isCharging, int currentCharge)
 {
-    mIsCharging = isCharging;
-    mCharge = currentCharge;
+    m_isCharging = isCharging;
+    m_charge = currentCharge;
 
-    Q_EMIT stateChanged(mIsCharging);
-    Q_EMIT chargeChanged(mCharge);
+    Q_EMIT stateChanged(m_isCharging);
+    Q_EMIT chargeChanged(m_charge);
 }
 
 

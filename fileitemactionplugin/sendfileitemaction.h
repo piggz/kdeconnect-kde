@@ -34,8 +34,8 @@ class SendFileItemAction : public KAbstractFileItemActionPlugin
 {
 Q_OBJECT
 public:
-    SendFileItemAction(QObject* parent, const QVariantList &args);
-    virtual QList< QAction* > actions(const KFileItemListProperties& fileItemInfos, QWidget* parentWidget);
+    SendFileItemAction(QObject* parent, const QVariantList& args);
+    QList< QAction* > actions(const KFileItemListProperties& fileItemInfos, QWidget* parentWidget) override;
 
 private Q_SLOTS:
     void sendFile();

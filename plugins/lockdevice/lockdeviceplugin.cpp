@@ -52,29 +52,27 @@ bool LockDevicePlugin::isLocked() const
 }
 void LockDevicePlugin::setLocked(bool locked)
 {
-    NetworkPackage np(PACKAGE_TYPE_LOCK);
-    np.set("setLocked", locked);
+    NetworkPackage np(PACKAGE_TYPE_LOCK_REQUEST, {{"setLocked", locked}});
     sendPackage(np);
 }
 
 bool LockDevicePlugin::receivePackage(const NetworkPackage & np)
 {
-    if (np.has("isLocked")) {
-        bool locked = np.get<bool>("isLocked");
+    if (np.has(QStringLiteral("isLocked"))) {
+        bool locked = np.get<bool>(QStringLiteral("isLocked"));
         if (m_remoteLocked != locked) {
             m_remoteLocked = locked;
             Q_EMIT lockedChanged(locked);
         }
     }
 
-    bool sendState = np.has("requestLocked");
-    if (np.has("setLocked")) {
-        iface()->SetActive(np.get<bool>("setLocked"));
+    bool sendState = np.has(QStringLiteral("requestLocked"));
+    if (np.has(QStringLiteral("setLocked"))) {
+        iface()->SetActive(np.get<bool>(QStringLiteral("setLocked")));
         sendState = true;
     }
     if (sendState) {
-        NetworkPackage np(PACKAGE_TYPE_LOCK);
-        np.set("isLocked", iface()->GetActive());
+        NetworkPackage np(PACKAGE_TYPE_LOCK, QVariantMap {{"isLocked", QVariant::fromValue<bool>(iface()->GetActive())}});
         sendPackage(np);
     }
 
@@ -84,7 +82,7 @@ bool LockDevicePlugin::receivePackage(const NetworkPackage & np)
 OrgFreedesktopScreenSaverInterface* LockDevicePlugin::iface()
 {
     if (!m_iface) {
-        m_iface = new OrgFreedesktopScreenSaverInterface("org.freedesktop.ScreenSaver", "/org/freedesktop/ScreenSaver", QDBusConnection::sessionBus());
+        m_iface = new OrgFreedesktopScreenSaverInterface(QStringLiteral("org.freedesktop.ScreenSaver"), QStringLiteral("/org/freedesktop/ScreenSaver"), QDBusConnection::sessionBus());
         if(!m_iface->isValid())
             qCWarning(KDECONNECT_PLUGIN_LOCKREMOTE) << "Couldn't connect to the ScreenSaver interface";
     }
@@ -93,10 +91,7 @@ OrgFreedesktopScreenSaverInterface* LockDevicePlugin::iface()
 
 void LockDevicePlugin::connected()
 {
-    QDBusConnection::sessionBus().registerObject(dbusPath(), this, QDBusConnection::ExportAllContents);
-
-    NetworkPackage np(PACKAGE_TYPE_LOCK);
-    np.set("requestLocked", QVariant());
+    NetworkPackage np(PACKAGE_TYPE_LOCK_REQUEST, {{"requestLocked", QVariant()}});
     sendPackage(np);
 }
 

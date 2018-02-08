@@ -24,6 +24,8 @@
 #include <KJob>
 #include <KProcess>
 
+#include <QTimer>
+
 #include "sftpplugin.h"
 
 class Mounter
@@ -31,18 +33,18 @@ class Mounter
 {
     Q_OBJECT
 public:
-  
-    explicit Mounter(SftpPlugin *sftp);
-    virtual ~Mounter();
-    
+
+    explicit Mounter(SftpPlugin* sftp);
+    ~Mounter() override;
+
     bool wait();
     bool isMounted() const { return m_started; }
-    
+
 Q_SIGNALS:
     void mounted();
     void unmounted();
     void failed(const QString& message);
-   
+
 private Q_SLOTS:
     void onPakcageReceived(const NetworkPackage& np);
     void onStarted();
@@ -51,13 +53,12 @@ private Q_SLOTS:
     void onMountTimeout();
     void start();
 
-private: 
-    void cleanMountPoint();
-    void unmount();
-    
+private:
+    void unmount(bool finished);
+
 private:
     SftpPlugin* m_sftp;
-    QScopedPointer<KProcess> m_proc;
+    KProcess* m_proc;
     QTimer m_connectTimer;
     QString m_mountPoint;
     bool m_started;

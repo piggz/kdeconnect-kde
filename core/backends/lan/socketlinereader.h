@@ -22,28 +22,32 @@
 #define SOCKETLINEREADER_H
 
 #include <QObject>
-#include <QString>
 #include <QQueue>
-#include <QTcpSocket>
+#include <QSslSocket>
 #include <QHostAddress>
+
+#include <kdeconnectcore_export.h>
 
 /*
  * Encapsulates a QTcpSocket and implements the same methods of its API that are
  * used by LanDeviceLink, but readyRead is emitted only when a newline is found.
  */
-class SocketLineReader
+class KDECONNECTCORE_EXPORT SocketLineReader
     : public QObject
 {
     Q_OBJECT
 
 public:
-    SocketLineReader(QTcpSocket* socket, QObject* parent = 0);
+    explicit SocketLineReader(QSslSocket* socket, QObject* parent = nullptr);
 
-    QByteArray readLine() { return mPackages.dequeue(); }
-    qint64 write(const QByteArray& data) { return mSocket->write(data); }
-    QHostAddress peerAddress() const { return mSocket->peerAddress(); }
-    qint64 bytesAvailable() const { return mPackages.size(); }
+    QByteArray readLine() { return m_packages.dequeue(); }
+    qint64 write(const QByteArray& data) { return m_socket->write(data); }
+    QHostAddress peerAddress() const { return m_socket->peerAddress(); }
+    QSslCertificate peerCertificate() const { return m_socket->peerCertificate(); }
+    qint64 bytesAvailable() const { return m_packages.size(); }
 
+    QSslSocket* m_socket;
+    
 Q_SIGNALS:
     void readyRead();
 
@@ -51,9 +55,8 @@ private Q_SLOTS:
     void dataReceived();
 
 private:
-    QByteArray lastChunk;
-    QTcpSocket* mSocket;
-    QQueue<QByteArray> mPackages;
+    QByteArray m_lastChunk;
+    QQueue<QByteArray> m_packages;
 
 };
 

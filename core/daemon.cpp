@@ -28,91 +28,141 @@
 #include "core_debug.h"
 #include "kdeconnectconfig.h"
 #include "networkpackage.h"
+
+#ifdef KDECONNECT_BLUETOOTH
+    #include "backends/bluetooth/bluetoothlinkprovider.h"
+#endif
+
 #include "backends/lan/lanlinkprovider.h"
 #include "backends/loopback/loopbacklinkprovider.h"
 #include "device.h"
-#include "networkpackage.h"
 #include "backends/devicelink.h"
 #include "backends/linkprovider.h"
 
-Q_GLOBAL_STATIC(Daemon*, s_instance)
+static Daemon* s_instance = nullptr;
 
 struct DaemonPrivate
 {
     //Different ways to find devices and connect to them
-    QSet<LinkProvider*> mLinkProviders;
+    QSet<LinkProvider*> m_linkProviders;
 
     //Every known device
-    QMap<QString, Device*> mDevices;
+    QMap<QString, Device*> m_devices;
 
+    QSet<QString> m_discoveryModeAcquisitions;
 };
 
 Daemon* Daemon::instance()
 {
-    Q_ASSERT(s_instance.exists());
-    return *s_instance;
+    Q_ASSERT(s_instance != nullptr);
+    return s_instance;
 }
 
-Daemon::Daemon(QObject *parent)
+Daemon::Daemon(QObject* parent, bool testMode)
     : QObject(parent)
     , d(new DaemonPrivate)
 {
-    Q_ASSERT(!s_instance.exists());
-    *s_instance = this;
+    Q_ASSERT(!s_instance);
+    s_instance = this;
     qCDebug(KDECONNECT_CORE) << "KdeConnect daemon starting";
 
     //Load backends
-    d->mLinkProviders.insert(new LanLinkProvider());
-    //d->mLinkProviders.insert(new LoopbackLinkProvider());
+    if (testMode)
+        d->m_linkProviders.insert(new LoopbackLinkProvider());
+    else {
+        d->m_linkProviders.insert(new LanLinkProvider());
+        #ifdef KDECONNECT_BLUETOOTH
+            d->m_linkProviders.insert(new BluetoothLinkProvider());
+        #endif
+    }
 
     //Read remebered paired devices
     const QStringList& list = KdeConnectConfig::instance()->trustedDevices();
-    Q_FOREACH(const QString& id, list) {
-        Device* device = new Device(this, id);
-        connect(device, SIGNAL(reachableStatusChanged()), this, SLOT(onDeviceStatusChanged()));
-        connect(device, SIGNAL(pairingChanged(bool)), this, SLOT(onDeviceStatusChanged()));
-        d->mDevices[id] = device;
-        Q_EMIT deviceAdded(id);
+    for (const QString& id : list) {
+        addDevice(new Device(this, id));
     }
 
     //Listen to new devices
-    Q_FOREACH (LinkProvider* a, d->mLinkProviders) {
-        connect(a, SIGNAL(onConnectionReceived(NetworkPackage, DeviceLink*)),
-                this, SLOT(onNewDeviceLink(NetworkPackage, DeviceLink*)));
+    for (LinkProvider* a : qAsConst(d->m_linkProviders)) {
+        connect(a, &LinkProvider::onConnectionReceived,
+                this, &Daemon::onNewDeviceLink);
+        a->onStart();
     }
-    setDiscoveryEnabled(true);
 
     //Register on DBus
-    QDBusConnection::sessionBus().registerService("org.kde.kdeconnect");
-    QDBusConnection::sessionBus().registerObject("/modules/kdeconnect", this, QDBusConnection::ExportScriptableContents);
+    QDBusConnection::sessionBus().registerService(QStringLiteral("org.kde.kdeconnect"));
+    QDBusConnection::sessionBus().registerObject(QStringLiteral("/modules/kdeconnect"), this, QDBusConnection::ExportScriptableContents);
 
     qCDebug(KDECONNECT_CORE) << "KdeConnect daemon started";
 }
 
-void Daemon::setDiscoveryEnabled(bool b)
+void Daemon::acquireDiscoveryMode(const QString& key)
 {
-    Q_FOREACH (LinkProvider* a, d->mLinkProviders) {
-        if (b)
-            a->onStart();
-        else
-            a->onStop();
+    bool oldState = d->m_discoveryModeAcquisitions.isEmpty();
+
+    d->m_discoveryModeAcquisitions.insert(key);
+
+    if (oldState != d->m_discoveryModeAcquisitions.isEmpty()) {
+        forceOnNetworkChange();
+    }
+}
+
+void Daemon::releaseDiscoveryMode(const QString& key)
+{
+    bool oldState = d->m_discoveryModeAcquisitions.isEmpty();
+
+    d->m_discoveryModeAcquisitions.remove(key);
+
+    if (oldState != d->m_discoveryModeAcquisitions.isEmpty()) {
+        cleanDevices();
+    }
+}
+
+void Daemon::removeDevice(Device* device)
+{
+    d->m_devices.remove(device->id());
+    device->deleteLater();
+    Q_EMIT deviceRemoved(device->id());
+}
+
+void Daemon::cleanDevices()
+{
+    for (Device* device : qAsConst(d->m_devices)) {
+        if (device->isTrusted()) {
+            continue;
+        }
+        device->cleanUnneededLinks();
+        //If there are no links remaining
+        if (!device->isReachable()) {
+            removeDevice(device);
+        }
     }
 }
 
 void Daemon::forceOnNetworkChange()
 {
-    qCDebug(KDECONNECT_CORE) << "Sending onNetworkChange to " << d->mLinkProviders.size() << " LinkProviders";
-    Q_FOREACH (LinkProvider* a, d->mLinkProviders) {
+    qCDebug(KDECONNECT_CORE) << "Sending onNetworkChange to " << d->m_linkProviders.size() << " LinkProviders";
+    for (LinkProvider* a : qAsConst(d->m_linkProviders)) {
         a->onNetworkChange();
     }
 }
 
-QStringList Daemon::devices(bool onlyReachable, bool onlyVisible) const
+Device*Daemon::getDevice(const QString& deviceId)
+{
+    for (Device* device : qAsConst(d->m_devices)) {
+        if (device->id() == deviceId) {
+            return device;
+        }
+    }
+    return Q_NULLPTR;
+}
+
+QStringList Daemon::devices(bool onlyReachable, bool onlyTrusted) const
 {
     QStringList ret;
-    Q_FOREACH(Device* device, d->mDevices) {
+    for (Device* device : qAsConst(d->m_devices)) {
         if (onlyReachable && !device->isReachable()) continue;
-        if (onlyVisible && !device->isPaired()) continue;
+        if (onlyTrusted && !device->isTrusted()) continue;
         ret.append(device->id());
     }
     return ret;
@@ -120,53 +170,52 @@ QStringList Daemon::devices(bool onlyReachable, bool onlyVisible) const
 
 void Daemon::onNewDeviceLink(const NetworkPackage& identityPackage, DeviceLink* dl)
 {
-    const QString& id = identityPackage.get<QString>("deviceId");
+    const QString& id = identityPackage.get<QString>(QStringLiteral("deviceId"));
 
     //qCDebug(KDECONNECT_CORE) << "Device discovered" << id << "via" << dl->provider()->name();
 
-    if (d->mDevices.contains(id)) {
-        //qCDebug(KDECONNECT_CORE) << "It is a known device";
-        Device* device = d->mDevices[id];
+    if (d->m_devices.contains(id)) {
+        qCDebug(KDECONNECT_CORE) << "It is a known device" << identityPackage.get<QString>(QStringLiteral("deviceName"));
+        Device* device = d->m_devices[id];
         bool wasReachable = device->isReachable();
         device->addLink(identityPackage, dl);
         if (!wasReachable) {
             Q_EMIT deviceVisibilityChanged(id, true);
         }
     } else {
-        //qCDebug(KDECONNECT_CORE) << "It is a new device";
-
+        qCDebug(KDECONNECT_CORE) << "It is a new device" << identityPackage.get<QString>(QStringLiteral("deviceName"));
         Device* device = new Device(this, identityPackage, dl);
-        connect(device, SIGNAL(reachableStatusChanged()), this, SLOT(onDeviceStatusChanged()));
-        connect(device, SIGNAL(pairingChanged(bool)), this, SLOT(onDeviceStatusChanged()));
-        d->mDevices[id] = device;
 
-        Q_EMIT deviceAdded(id);
+        //we discard the connections that we created but it's not paired.
+        if (!isDiscoveringDevices() && !device->isTrusted() && !dl->linkShouldBeKeptAlive()) {
+            device->deleteLater();
+        } else {
+            addDevice(device);
+        }
     }
 }
 
 void Daemon::onDeviceStatusChanged()
 {
     Device* device = (Device*)sender();
-    QString id = device->id();
 
-    qCDebug(KDECONNECT_CORE) << "Device" << device->name() << "status changed. Reachable:" << device->isReachable() << ". Paired: " << device->isPaired();
+    //qCDebug(KDECONNECT_CORE) << "Device" << device->name() << "status changed. Reachable:" << device->isReachable() << ". Paired: " << device->isPaired();
 
-    if (!device->isReachable() && !device->isPaired()) {
-        qCDebug(KDECONNECT_CORE) << "Destroying device" << device->name();
-        d->mDevices.remove(id);
-        device->deleteLater();
-        Q_EMIT deviceRemoved(id);
+    if (!device->isReachable() && !device->isTrusted()) {
+        //qCDebug(KDECONNECT_CORE) << "Destroying device" << device->name();
+        removeDevice(device);
     } else {
-        Q_EMIT deviceVisibilityChanged(id, device->isReachable());
+        Q_EMIT deviceVisibilityChanged(device->id(), device->isReachable());
     }
 
 }
 
-void Daemon::setAnnouncedName(QString name)
+void Daemon::setAnnouncedName(const QString& name)
 {
     qCDebug(KDECONNECT_CORE()) << "Announcing name";
     KdeConnectConfig::instance()->setName(name);
     forceOnNetworkChange();
+    Q_EMIT announcedNameChanged(name);
 }
 
 QString Daemon::announcedName()
@@ -183,8 +232,56 @@ QNetworkAccessManager* Daemon::networkAccessManager()
     return manager;
 }
 
+QList<Device*> Daemon::devicesList() const
+{
+    return d->m_devices.values();
+}
+
+bool Daemon::isDiscoveringDevices() const
+{
+    return !d->m_discoveryModeAcquisitions.isEmpty();
+}
+
+QString Daemon::deviceIdByName(const QString& name) const
+{
+    for (Device* device : qAsConst(d->m_devices)) {
+        if (device->name() == name && device->isTrusted())
+            return device->id();
+    }
+    return {};
+}
+
+void Daemon::addDevice(Device* device)
+{
+    const QString id = device->id();
+    connect(device, &Device::reachableChanged, this, &Daemon::onDeviceStatusChanged);
+    connect(device, &Device::trustedChanged, this, &Daemon::onDeviceStatusChanged);
+    connect(device, &Device::hasPairingRequestsChanged, this, &Daemon::pairingRequestsChanged);
+    connect(device, &Device::hasPairingRequestsChanged, this, [this, device](bool hasPairingRequests) {
+        if (hasPairingRequests)
+            askPairingConfirmation(device);
+    } );
+    d->m_devices[id] = device;
+
+    Q_EMIT deviceAdded(id);
+}
+
+QStringList Daemon::pairingRequests() const
+{
+    QStringList ret;
+    for(Device* dev: d->m_devices) {
+        if (dev->hasPairingRequests())
+            ret += dev->id();
+    }
+    return ret;
+}
+
 Daemon::~Daemon()
 {
 
 }
 
+QString Daemon::selfId() const
+{
+    return KdeConnectConfig::instance()->deviceId();
+}

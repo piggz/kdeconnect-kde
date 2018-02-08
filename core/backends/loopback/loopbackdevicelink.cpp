@@ -28,30 +28,9 @@ LoopbackDeviceLink::LoopbackDeviceLink(const QString& deviceId, LoopbackLinkProv
 
 }
 
-bool LoopbackDeviceLink::sendPackageEncrypted(QCA::PublicKey& key, NetworkPackage& input)
+QString LoopbackDeviceLink::name()
 {
-    if (mPrivateKey.isNull() || key.isNull()) {
-        return false;
-    }
-
-    input.encrypt(key);
-
-    QByteArray serialized = input.serialize();
-
-    NetworkPackage unserialized(QString::null);
-    NetworkPackage::unserialize(serialized, &unserialized);
-
-    NetworkPackage output(QString::null);
-    unserialized.decrypt(mPrivateKey, &output);
-
-    //LoopbackDeviceLink does not need deviceTransferInfo
-    if (input.hasPayload()) {
-        output.setPayload(input.payload(), input.payloadSize());
-    }
-
-    Q_EMIT receivedPackage(output);
-
-    return true;
+    return QStringLiteral("LoopbackLink");
 }
 
 bool LoopbackDeviceLink::sendPackage(NetworkPackage& input)
@@ -61,6 +40,8 @@ bool LoopbackDeviceLink::sendPackage(NetworkPackage& input)
 
     //LoopbackDeviceLink does not need deviceTransferInfo
     if (input.hasPayload()) {
+        bool b = input.payload()->open(QIODevice::ReadOnly);
+        Q_ASSERT(b);
         output.setPayload(input.payload(), input.payloadSize());
     }
 

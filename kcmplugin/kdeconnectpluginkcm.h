@@ -23,8 +23,8 @@
 
 #include <KCModule>
 
-#include "core/kdeconnectcore_export.h"
 #include "core/kdeconnectpluginconfig.h"
+#include "kdeconnectpluginkcm_export.h"
 
 struct KdeConnectPluginKcmPrivate;
 
@@ -32,14 +32,14 @@ struct KdeConnectPluginKcmPrivate;
  * Inheriting your plugin's KCM from this class gets you a easy way to share
  * configuration values between the KCM and the plugin.
  */
-class KDECONNECTCORE_EXPORT KdeConnectPluginKcm
+class KDECONNECTPLUGINKCM_EXPORT KdeConnectPluginKcm
     : public KCModule
 {
     Q_OBJECT
 
 public:
     KdeConnectPluginKcm(QWidget* parent, const QVariantList& args, const QString& componentName);
-    virtual ~KdeConnectPluginKcm();
+    ~KdeConnectPluginKcm() override;
 
     /**
      * The device this kcm is instantiated for

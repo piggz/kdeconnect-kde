@@ -25,7 +25,8 @@
 
 #include <core/kdeconnectplugin.h>
 
-#define PACKAGE_TYPE_MPRIS QLatin1String("kdeconnect.mpris")
+#define PACKAGE_TYPE_MPRIS_REQUEST QStringLiteral("kdeconnect.mpris.request")
+#define PACKAGE_TYPE_MPRIS QStringLiteral("kdeconnect.mpris")
 
 class Q_DECL_EXPORT MprisRemotePlugin
     : public KdeConnectPlugin
@@ -41,8 +42,8 @@ class Q_DECL_EXPORT MprisRemotePlugin
     Q_PROPERTY(QString nowPlaying READ nowPlaying NOTIFY propertiesChanged)
 
 public:
-    explicit MprisRemotePlugin(QObject *parent, const QVariantList &args);
-    virtual ~MprisRemotePlugin();
+    explicit MprisRemotePlugin(QObject* parent, const QVariantList &args);
+    ~MprisRemotePlugin() override;
 
     long position() const;
     int volume() const { return m_volume; }
@@ -56,20 +57,19 @@ public:
     void setPosition(int position);
     void setPlayer(const QString& player);
 
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override {}
+    QString dbusPath() const override;
 
-    void seek(int offset) const;
-    void requestPlayerStatus();
-    void requestPlayerList();
-    void sendAction(const QString& action);
+    Q_SCRIPTABLE void seek(int offset) const;
+    Q_SCRIPTABLE void requestPlayerList();
+    Q_SCRIPTABLE void sendAction(const QString& action);
 
 Q_SIGNALS:
     void propertiesChanged();
 
 private:
-    QString dbusPath() const;
+    void requestPlayerStatus();
 
     QString m_player;
     bool m_playing;

@@ -21,32 +21,34 @@
 #ifndef KDECONNECTPLUGINCONFIG_H
 #define KDECONNECTPLUGINCONFIG_H
 
+#include <QObject>
 #include <QDir>
 #include <QString>
 #include <QStringList>
 #include <QVariant>
 
-#include "default_args.h"
 #include "kdeconnectcore_export.h"
 
 struct KdeConnectPluginConfigPrivate;
 
-class KDECONNECTCORE_EXPORT KdeConnectPluginConfig
+class KDECONNECTCORE_EXPORT KdeConnectPluginConfig : public QObject
 {
+    Q_OBJECT
+
 public:
     KdeConnectPluginConfig(const QString& deviceId, const QString& pluginName);
-    ~KdeConnectPluginConfig();
-
-    /**
-     * A directory to store stuff for this device and plugin. It's private in the sense
-     * of not-shared with other plugins or devices, not from a security point of view.
-     */
-    QDir privateDirectory();
+    ~KdeConnectPluginConfig() override;
 
     /**
      * Store a key-value pair in this config object
      */
     void set(const QString& key, const QVariant& value);
+
+    /**
+     * Store a list of values in this config object under the array name
+     * specified in key.
+     */
+    void setList(const QString& key, const QVariantList& list);
 
     /**
      * Read a key-value pair from this config object
@@ -56,10 +58,17 @@ public:
     /**
      * Convenience method that will convert the QVariant to whatever type for you
      */
-    template<typename T> T get(const QString& key, const T& defaultValue = default_arg<T>::get()) {
+    template<typename T> T get(const QString& key, const T& defaultValue = {}) {
         return get(key, QVariant(defaultValue)).template value<T>(); //Important note: Awesome template syntax is awesome
     }
 
+    QVariantList getList(const QString& key, const QVariantList& defaultValue = {});
+
+private Q_SLOTS:
+    void slotConfigChanged();
+
+Q_SIGNALS:
+    void configChanged();
 
 private:
     QScopedPointer<KdeConnectPluginConfigPrivate> d;

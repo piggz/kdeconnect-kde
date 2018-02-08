@@ -17,14 +17,13 @@
  *************************************************************************************/
 
 #include "../core/backends/lan/socketlinereader.h"
+#include "../core/backends/lan/server.h"
 
 #include <QTest>
-#include <QTcpServer>
-#include <QTcpSocket>
+#include <QSslSocket>
 #include <QProcess>
 #include <QEventLoop>
 #include <QTimer>
-#include <unistd.h>
 
 class TestSocketLineReader : public QObject
 {
@@ -37,81 +36,82 @@ private Q_SLOTS:
     void socketLineReader();
 
 private:
-    QTimer mTimer;
-    QEventLoop mLoop;
-    QList<QByteArray> mPackages;
-    QTcpServer *mServer;
-    QTcpSocket *mConn;
-    SocketLineReader *mReader;
+    QTimer m_timer;
+    QEventLoop m_loop;
+    QList<QByteArray> m_packages;
+    Server* m_server;
+    QSslSocket* m_conn;
+    SocketLineReader* m_reader;
 };
 
 void TestSocketLineReader::initTestCase()
 {
-    mServer = new QTcpServer(this);
-    QVERIFY2(mServer->listen(QHostAddress::LocalHost, 8694), "Failed to create local tcp server");
+    m_server = new Server(this);
 
-    mTimer.setInterval(4000);//For second is more enough to send some data via local socket
-    mTimer.setSingleShot(true);
-    connect(&mTimer, SIGNAL(timeout()), &mLoop, SLOT(quit()));
+    QVERIFY2(m_server->listen(QHostAddress::LocalHost, 8694), "Failed to create local tcp server");
 
-    mConn = new QTcpSocket(this);
-    mConn->connectToHost(QHostAddress::LocalHost, 8694);
-    connect(mConn, SIGNAL(connected()), &mLoop, SLOT(quit()));
-    mTimer.start();
-    mLoop.exec();
+    m_timer.setInterval(4000);//For second is more enough to send some data via local socket
+    m_timer.setSingleShot(true);
+    connect(&m_timer, &QTimer::timeout, &m_loop, &QEventLoop::quit);
 
-    QVERIFY2(mConn->isOpen(), "Could not connect to local tcp server");
+    m_conn = new QSslSocket(this);
+    m_conn->connectToHost(QHostAddress::LocalHost, 8694);
+    connect(m_conn, &QAbstractSocket::connected, &m_loop, &QEventLoop::quit);
+    m_timer.start();
+    m_loop.exec();
+
+    QVERIFY2(m_conn->isOpen(), "Could not connect to local tcp server");
 }
 
 void TestSocketLineReader::socketLineReader()
 {
     QList<QByteArray> dataToSend;
     dataToSend << "foobar\n" << "barfoo\n" << "foobar?\n" << "\n" << "barfoo!\n" << "panda\n";
-    Q_FOREACH(const QByteArray &line, dataToSend) {
-        mConn->write(line);
+    for (const QByteArray& line : dataToSend) {
+        m_conn->write(line);
     }
-    mConn->flush();
+    m_conn->flush();
 
     int maxAttemps = 5;
-    while(!mServer->hasPendingConnections() && maxAttemps > 0) {
+    while(!m_server->hasPendingConnections() && maxAttemps > 0) {
         --maxAttemps;
         QTest::qSleep(1000);
     }
 
-    QTcpSocket *sock = mServer->nextPendingConnection();
+    QSslSocket* sock = m_server->nextPendingConnection();
 
-    QVERIFY2(sock != 0, "Could not open a connection to the client");
+    QVERIFY2(sock != nullptr, "Could not open a connection to the client");
 
-    mReader = new SocketLineReader(sock, this);
-    connect(mReader, SIGNAL(readyRead()), SLOT(newPackage()));
-    mTimer.start();
-    mLoop.exec();
+    m_reader = new SocketLineReader(sock, this);
+    connect(m_reader, &SocketLineReader::readyRead, this, &TestSocketLineReader::newPackage);
+    m_timer.start();
+    m_loop.exec();
 
     /* remove the empty line before compare */
     dataToSend.removeOne("\n");
 
-    QCOMPARE(mPackages.count(), 5);//We expect 5 Packages
+    QCOMPARE(m_packages.count(), 5);//We expect 5 Packages
     for(int x = 0;x < 5; ++x) {
-        QCOMPARE(mPackages[x], dataToSend[x]);
+        QCOMPARE(m_packages[x], dataToSend[x]);
     }
 }
 
 void TestSocketLineReader::newPackage()
 {
-    if (!mReader->bytesAvailable()) {
+    if (!m_reader->bytesAvailable()) {
         return;
     }
 
     int maxLoops = 5;
-    while(mReader->bytesAvailable() > 0 && maxLoops > 0) {
+    while(m_reader->bytesAvailable() > 0 && maxLoops > 0) {
         --maxLoops;
-        const QByteArray package = mReader->readLine();
+        const QByteArray package = m_reader->readLine();
         if (!package.isEmpty()) {
-            mPackages.append(package);
+            m_packages.append(package);
         }
 
-        if (mPackages.count() == 5) {
-            mLoop.exit();
+        if (m_packages.count() == 5) {
+            m_loop.exit();
         }
     }
 }

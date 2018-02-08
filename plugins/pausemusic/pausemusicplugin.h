@@ -27,22 +27,20 @@
 
 #include <core/kdeconnectplugin.h>
 
+#include <QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(KDECONNECT_PLUGIN_PAUSEMUSIC)
+
 class PauseMusicPlugin
     : public KdeConnectPlugin
 {
     Q_OBJECT
 
 public:
-    explicit PauseMusicPlugin(QObject *parent, const QVariantList &args);
+    explicit PauseMusicPlugin(QObject* parent, const QVariantList& args);
 
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected() { }
-
-    /**
-     * @returns 0 if not muted, 1 if muted or -1 if there was an error
-     */
-    int isKMixMuted();
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override { }
     
 private:
     QSet<QString> pausedSources;

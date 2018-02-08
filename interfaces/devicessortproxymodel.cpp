@@ -29,17 +29,17 @@ DevicesSortProxyModel::DevicesSortProxyModel(DevicesModel* devicesModel)
     setSourceModel(devicesModel);
 }
 
-void DevicesSortProxyModel::setSourceModel(QAbstractItemModel *devicesModel)
+void DevicesSortProxyModel::setSourceModel(QAbstractItemModel* devicesModel)
 {
     QSortFilterProxyModel::setSourceModel(devicesModel);
     if (devicesModel) {
         setSortRole(DevicesModel::StatusModelRole);
-        connect(devicesModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(sourceDataChanged(QModelIndex,QModelIndex)));
+        connect(devicesModel, &QAbstractItemModel::dataChanged, this, &DevicesSortProxyModel::sourceDataChanged);
     }
     sort(0);
 }
 
-void DevicesSortProxyModel::sourceDataChanged(QModelIndex , QModelIndex )
+void DevicesSortProxyModel::sourceDataChanged()
 {
     sort(0);
 }

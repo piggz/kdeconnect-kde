@@ -26,27 +26,31 @@
 #include <QIODevice>
 #include <QVariantMap>
 #include <QHostAddress>
-#include <QTcpSocket>
 #include <QSharedPointer>
+#include <QSslSocket>
+#include <QBuffer>
 
-class DownloadJob
+#include "kdeconnectcore_export.h"
+
+
+class KDECONNECTCORE_EXPORT DownloadJob
     : public KJob
 {
     Q_OBJECT
 public:
-    DownloadJob(QHostAddress address, QVariantMap transferInfo);
-    virtual void start();
+    DownloadJob(const QHostAddress& address, const QVariantMap& transferInfo);
+    ~DownloadJob() override;
+    void start() override;
     QSharedPointer<QIODevice> getPayload();
 
 private:
-    QHostAddress mAddress;
-    qint16 mPort;
-    QSharedPointer<QTcpSocket> mSocket;
-
+    QHostAddress m_address;
+    qint16 m_port;
+    QSharedPointer<QSslSocket> m_socket;
 
 private Q_SLOTS:
-    void disconnected();
-
+    void socketFailed(QAbstractSocket::SocketError error);
+    void socketConnected();
 };
 
 #endif // UPLOADJOB_H

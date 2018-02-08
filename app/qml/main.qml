@@ -21,140 +21,99 @@
 import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.1
+import org.kde.kirigami 2.0 as Kirigami
 import org.kde.kdeconnect 1.0
 
-ApplicationWindow
+Kirigami.ApplicationWindow
 {
     id: root
     visible: true
-    width: 400
+    width: 900
     height: 500
-    title: i18n("KDE Connect")
 
-    toolBar: RowLayout {
-        Button {
-            iconName: "go-previous"
-            enabled: stack.depth>1
-            onClicked: stack.pop()
-        }
-        Label {
-            Layout.fillWidth: true
-            text: "KDE Connect"
-            font.pointSize: 20
-        }
-    }
-    StackView {
-        id: stack
-        anchors {
-            fill: parent
-            margins: 5
-        }
-        initialItem: ScrollView {
-            Layout.fillHeight: true
-            ListView {
-                id: devicesView
-
-                section {
-                    property: "status"
-                    delegate: Label {
-                        text: switch (parseInt(section))
-                        {
-                            case DevicesModel.Paired:
-                                return i18n("Paired")
-                            case DevicesModel.Reachable:
-                                return i18n("Reachable")
-                            case (DevicesModel.Reachable | DevicesModel.Paired):
-                                return i18n("Paired & Reachable")
-                        }
-
-                    }
-                }
-
-                spacing: 5
-                model: DevicesSortProxyModel {
-                    sourceModel: DevicesModel {
-                        id: connectDeviceModel
-                        displayFilter: DevicesModel.Reachable
-                    }
-                }
-                delegate: DeviceDelegate {
-                    width: parent.width
-                    onClicked: {
-                        var data = {
-                            item: deviceViewComponent,
-                            properties: {currentDevice: device}
-                        };
-                        stack.push(data);
-                    }
-                }
-            }
-        }
+    Component {
+        id: findDevicesComp
+        FindDevicesPage {}
     }
 
     Component {
-        id: deviceViewComponent
-        ColumnLayout {
-            id: deviceView
-            property QtObject currentDevice
-            Loader {
-                Layout.fillHeight: true
+        id: deviceComp
+        DevicePage {}
+    }
+
+    Kirigami.Action {
+        id: findDevicesAction
+        text: i18n ("Find devices...")
+        iconName: "list-add"
+        checked: pageStack.currentItem && pageStack.currentItem.objectName == "FindDevices"
+
+        onTriggered: {
+            root.pageStack.clear()
+            root.pageStack.push(findDevicesComp);
+        }
+    }
+
+    globalDrawer: Kirigami.GlobalDrawer {
+        id: drawer
+        title: i18n("KDE Connect")
+        titleIcon: "kdeconnect"
+//         bannerImageSource: "/home/apol/devel/kde5/share/wallpapers/Next/contents/images/1024x768.png"
+
+        topContent: [
+            TextField {
                 Layout.fillWidth: true
 
-                sourceComponent: currentDevice.isPaired ? trustedDevice : untrustedDevice
-                Component {
-                    id: trustedDevice
-                    ColumnLayout {
-                        id: trustedView
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-
-                        Button {
-                            text: i18n("Un-Pair")
-                            onClicked: deviceView.currentDevice.unpair()
-                        }
-                        Button {
-                            text: i18n("Send Ping")
-                            onClicked: deviceView.currentDevice.pluginCall("ping", "sendPing");
-                        }
-                        Button {
-                            text: i18n("Open Multimedia Remote Control")
-                            onClicked: stack.push( {
-                                item: "qrc:/qml/mpris.qml",
-                                properties: { mprisInterface: MprisDbusInterfaceFactory.create(deviceView.currentDevice.id()) }
-                            } );
-                        }
-                        Button {
-                            text: i18n("Mouse Pad")
-                            onClicked: stack.push( {
-                                item: "qrc:/qml/mousepad.qml",
-                                properties: { remoteControlInterface: RemoteControlDbusInterfaceFactory.create(deviceView.currentDevice.id()) }
-                            } );
-                        }
-                        Button {
-                            property var lockIface: LockDeviceDbusInterfaceFactory.create(deviceView.currentDevice.id())
-                            text: lockIface.isLocked ? i18n("Unlock") : i18n("Lock")
-                            onClicked: {
-                                lockIface.isLocked = !lockIface.isLocked;
-                            }
-                        }
-
-                        Item { Layout.fillHeight: true }
-                    }
+                DBusProperty {
+                    id: announcedNameProperty
+                    object: DaemonDbusInterface
+                    read: "announcedName"
+                    defaultValue: ""
                 }
-                Component {
-                    id: untrustedDevice
-                    ColumnLayout {
-                        id: untrustedView
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
 
-                        Button {
-                            text: i18n("Pair")
-                            onClicked: deviceView.currentDevice.requestPair()
-                        }
-                    }
+                text: announcedNameProperty.value
+                onAccepted: {
+                    DaemonDbusInterface.setAnnouncedName(text)
+                    text = Qt.binding(function() {return announcedNameProperty.value})
+                }
+            }
+        ]
+        property var objects: [findDevicesAction]
+        Instantiator {
+            model: DevicesSortProxyModel {
+                sourceModel: DevicesModel { displayFilter: DevicesModel.Paired }
+            }
+            delegate: Kirigami.Action {
+                iconName: model.iconName
+                text: display + "\n" + toolTip
+                enabled: status & DevicesModel.Reachable
+                checked: pageStack.currentItem && pageStack.currentItem.currentDevice == device
+                onTriggered: {
+                    root.pageStack.clear()
+                    root.pageStack.push(
+                        deviceComp,
+                        {currentDevice: device}
+                    );
+                }
+            }
+
+            onObjectAdded: {
+                drawer.objects.push(object)
+                drawer.objects = drawer.objects
+            }
+            onObjectRemoved: {
+                var idx = drawer.objects.indexOf(object);
+                if (idx>=0) {
+                    var removed = drawer.objects.splice(idx, 1)
+                    drawer.objects = drawer.objects
                 }
             }
         }
+        actions: objects
     }
+
+    contextDrawer: Kirigami.ContextDrawer {
+        id: contextDrawer
+    }
+
+    pageStack.initialPage: findDevicesComp
 }

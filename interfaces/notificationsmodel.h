@@ -34,7 +34,7 @@ class KDECONNECTINTERFACES_EXPORT NotificationsModel
     Q_OBJECT
     Q_PROPERTY(QString deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
     Q_PROPERTY(int count READ rowCount NOTIFY rowsChanged)
-    Q_PROPERTY(bool isAnyDimissable READ isAnyDimissable NOTIFY anyDismissableChanged)
+    Q_PROPERTY(bool isAnyDimissable READ isAnyDimissable NOTIFY anyDismissableChanged STORED false)
 
 public:
     enum ModelRoles {
@@ -44,22 +44,26 @@ public:
         AppNameModelRole   = Qt::UserRole + 1,
         IdModelRole,
         DismissableModelRole,
+        RepliableModelRole,
+        IconPathModelRole,
         DbusInterfaceRole,
+        TitleModelRole,
+        TextModelRole
     };
 
-    NotificationsModel(QObject* parent = 0);
-    virtual ~NotificationsModel();
+    explicit NotificationsModel(QObject* parent = nullptr);
+    ~NotificationsModel() override;
 
     QString deviceId() const;
     void setDeviceId(const QString& deviceId);
 
-    virtual QVariant data(const QModelIndex& index, int role) const;
-    virtual int rowCount(const QModelIndex& parent = QModelIndex()) const;
+    QVariant data(const QModelIndex& index, int role) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
     NotificationDbusInterface* getNotification(const QModelIndex& index) const;
 
     Q_INVOKABLE bool isAnyDimissable() const;
-    virtual QHash<int, QByteArray> roleNames() const;
+    QHash<int, QByteArray> roleNames() const override;
 
 public Q_SLOTS:
     void dismissAll();
@@ -67,8 +71,10 @@ public Q_SLOTS:
 private Q_SLOTS:
     void notificationAdded(const QString& id);
     void notificationRemoved(const QString& id);
+    void notificationUpdated(const QString& id);
     void refreshNotificationList();
     void receivedNotifications(QDBusPendingCallWatcher* watcher);
+    void clearNotifications();
 
 Q_SIGNALS:
     void deviceIdChanged(const QString& value);
@@ -76,8 +82,6 @@ Q_SIGNALS:
     void rowsChanged();
 
 private:
-    void clearNotifications();
-
     DeviceNotificationsDbusInterface* m_dbusInterface;
     QList<NotificationDbusInterface*> m_notificationList;
     QString m_deviceId;

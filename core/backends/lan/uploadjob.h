@@ -25,29 +25,39 @@
 
 #include <QIODevice>
 #include <QVariantMap>
-#include <QTcpServer>
-#include <QTcpSocket>
 #include <QSharedPointer>
+#include <QSslSocket>
+#include "server.h"
 
-class UploadJob
+class KDECONNECTCORE_EXPORT UploadJob
     : public KJob
 {
     Q_OBJECT
 public:
-    UploadJob(const QSharedPointer<QIODevice>& source);
-    virtual void start();
-    QVariantMap getTransferInfo();
+    explicit UploadJob(const QSharedPointer<QIODevice>& source, const QString& deviceId);
+
+    void start() override;
+
+    QVariantMap transferInfo();
 
 private:
-    QSharedPointer<QIODevice> mInput;
-    QTcpServer* mServer;
-    QTcpSocket* mSocket;
-    quint16 mPort;
+    const QSharedPointer<QIODevice> m_input;
+    Server * const m_server;
+    QSslSocket* m_socket;
+    quint16 m_port;
+    const QString m_deviceId;
+
+    const static quint16 MIN_PORT = 1739;
+    const static quint16 MAX_PORT = 1764;
 
 private Q_SLOTS:
-    void readyRead();
+    void startUploading();
     void newConnection();
     void aboutToClose();
+    void cleanup();
+
+    void socketFailed(QAbstractSocket::SocketError);
+    void sslErrors(const QList<QSslError>& errors);
 };
 
 #endif // UPLOADJOB_H

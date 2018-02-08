@@ -30,13 +30,13 @@ class KDECONNECTINTERFACES_EXPORT DevicesSortProxyModel : public QSortFilterProx
 {
     Q_OBJECT
 public:
-    DevicesSortProxyModel(DevicesModel* devicesModel = Q_NULLPTR);
-    virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const;
-    virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const;
-    virtual void setSourceModel(QAbstractItemModel *sourceModel);
+    explicit DevicesSortProxyModel(DevicesModel* devicesModel = Q_NULLPTR);
+    bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
+    bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
+    void setSourceModel(QAbstractItemModel* sourceModel) override;
 
 public Q_SLOTS:
-    void sourceDataChanged(QModelIndex,QModelIndex);
+    void sourceDataChanged();
 };
 
 #endif // DEVICESSORTPROXYMODEL_H

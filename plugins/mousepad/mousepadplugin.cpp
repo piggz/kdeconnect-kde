@@ -24,10 +24,13 @@
 #include <KLocalizedString>
 #include <QDebug>
 #include <QGuiApplication>
+
+#if HAVE_X11
 #include <QX11Info>
 #include <X11/extensions/XTest.h>
 #include <X11/keysym.h>
 #include <fakekey/fakekey.h>
+#endif
 
 #if HAVE_WAYLAND
 #include <KWayland/Client/connection_thread.h>
@@ -45,6 +48,7 @@ enum MouseButtons {
     MouseWheelDown = 5
 };
 
+#if HAVE_X11
 //Translation table to keep in sync within all the implementations
 int SpecialKeysMap[] = {
     0,              // Invalid
@@ -81,12 +85,19 @@ int SpecialKeysMap[] = {
     XK_F11,         // 31
     XK_F12,         // 32
 };
+#endif
 
 template <typename T, size_t N>
 size_t arraySize(T(&arr)[N]) { (void)arr; return N; }
 
 MousepadPlugin::MousepadPlugin(QObject* parent, const QVariantList& args)
-    : KdeConnectPlugin(parent, args), m_fakekey(0), m_x11(QX11Info::isPlatformX11())
+    : KdeConnectPlugin(parent, args)
+#if HAVE_X11
+    , m_fakekey(nullptr)
+    , m_x11(QX11Info::isPlatformX11())
+#else
+    , m_x11(false)
+#endif
 #if HAVE_WAYLAND
     , m_waylandInput(nullptr)
     , m_waylandAuthenticationRequested(false)
@@ -99,17 +110,21 @@ MousepadPlugin::MousepadPlugin(QObject* parent, const QVariantList& args)
 
 MousepadPlugin::~MousepadPlugin()
 {
+#if HAVE_X11
     if (m_fakekey) {
         free(m_fakekey);
-        m_fakekey = 0;
+        m_fakekey = nullptr;
     }
+#endif
 }
 
 bool MousepadPlugin::receivePackage(const NetworkPackage& np)
 {
+#if HAVE_X11
     if (m_x11) {
         return handlePackageX11(np);
     }
+#endif
 #if HAVE_WAYLAND
     if (m_waylandInput) {
         if (!m_waylandAuthenticationRequested) {
@@ -122,51 +137,71 @@ bool MousepadPlugin::receivePackage(const NetworkPackage& np)
     return false;
 }
 
-bool MousepadPlugin::handlePackageX11(const NetworkPackage &np)
+#if HAVE_X11
+bool isLeftHanded(Display * display)
+{
+    unsigned char map[20];
+     int num_buttons = XGetPointerMapping(display, map, 20);
+    if( num_buttons == 1 ) {
+        return false;
+    } else if( num_buttons == 2 ) {
+        return ( (int)map[0] == 2 && (int)map[1] == 1 );
+    } else {
+        return ( (int)map[0] == 3 && (int)map[2] == 1 );
+    }
+}
+#endif
+
+#if HAVE_X11
+bool MousepadPlugin::handlePackageX11(const NetworkPackage& np)
 {
     //qDebug() << np.serialize();
 
     //TODO: Split mouse/keyboard in two different plugins to avoid this big if statement
 
-    float dx = np.get<float>("dx", 0);
-    float dy = np.get<float>("dy", 0);
+    float dx = np.get<float>(QStringLiteral("dx"), 0);
+    float dy = np.get<float>(QStringLiteral("dy"), 0);
 
-    bool isSingleClick = np.get<bool>("singleclick", false);
-    bool isDoubleClick = np.get<bool>("doubleclick", false);
-    bool isMiddleClick = np.get<bool>("middleclick", false);
-    bool isRightClick = np.get<bool>("rightclick", false);
-    bool isSingleHold = np.get<bool>("singlehold", false);
-    bool isSingleRelease = np.get<bool>("singlerelease", false);
-    bool isScroll = np.get<bool>("scroll", false);
-    QString key = np.get<QString>("key", "");
-    int specialKey = np.get<int>("specialKey", 0);
+    bool isSingleClick = np.get<bool>(QStringLiteral("singleclick"), false);
+    bool isDoubleClick = np.get<bool>(QStringLiteral("doubleclick"), false);
+    bool isMiddleClick = np.get<bool>(QStringLiteral("middleclick"), false);
+    bool isRightClick = np.get<bool>(QStringLiteral("rightclick"), false);
+    bool isSingleHold = np.get<bool>(QStringLiteral("singlehold"), false);
+    bool isSingleRelease = np.get<bool>(QStringLiteral("singlerelease"), false);
+    bool isScroll = np.get<bool>(QStringLiteral("scroll"), false);
+    QString key = np.get<QString>(QStringLiteral("key"), QLatin1String(""));
+    int specialKey = np.get<int>(QStringLiteral("specialKey"), 0);
 
     if (isSingleClick || isDoubleClick || isMiddleClick || isRightClick || isSingleHold || isScroll || !key.isEmpty() || specialKey) {
-        Display *display = QX11Info::display();
+        Display* display = QX11Info::display();
         if(!display) {
             return false;
         }
 
+        bool leftHanded = isLeftHanded(display);
+        int mainMouseButton = leftHanded? RightMouseButton : LeftMouseButton;
+        int secondaryMouseButton = leftHanded? LeftMouseButton : RightMouseButton;
+
         if (isSingleClick) {
-            XTestFakeButtonEvent(display, LeftMouseButton, True, 0);
-            XTestFakeButtonEvent(display, LeftMouseButton, False, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, True, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, False, 0);
         } else if (isDoubleClick) {
-            XTestFakeButtonEvent(display, LeftMouseButton, True, 0);
-            XTestFakeButtonEvent(display, LeftMouseButton, False, 0);
-            XTestFakeButtonEvent(display, LeftMouseButton, True, 0);
-            XTestFakeButtonEvent(display, LeftMouseButton, False, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, True, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, False, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, True, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, False, 0);
         } else if (isMiddleClick) {
             XTestFakeButtonEvent(display, MiddleMouseButton, True, 0);
             XTestFakeButtonEvent(display, MiddleMouseButton, False, 0);
         } else if (isRightClick) {
-            XTestFakeButtonEvent(display, RightMouseButton, True, 0);
-            XTestFakeButtonEvent(display, RightMouseButton, False, 0);
+            XTestFakeButtonEvent(display, secondaryMouseButton, True, 0);
+            XTestFakeButtonEvent(display, secondaryMouseButton, False, 0);
         } else if (isSingleHold){
             //For drag'n drop
-            XTestFakeButtonEvent(display, LeftMouseButton, True, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, True, 0);
         } else if (isSingleRelease){
             //For drag'n drop. NEVER USED (release is done by tapping, which actually triggers a isSingleClick). Kept here for future-proofnes.
-            XTestFakeButtonEvent(display, LeftMouseButton, False, 0);
+            XTestFakeButtonEvent(display, mainMouseButton, False, 0);
         } else if (isScroll) {
             if (dy < 0) {
                 XTestFakeButtonEvent(display, MouseWheelDown, True, 0);
@@ -177,9 +212,9 @@ bool MousepadPlugin::handlePackageX11(const NetworkPackage &np)
             }
         } else if (!key.isEmpty() || specialKey) {
 
-            bool ctrl = np.get<bool>("ctrl", false);
-            bool alt = np.get<bool>("alt", false);
-            bool shift = np.get<bool>("shift", false);
+            bool ctrl = np.get<bool>(QStringLiteral("ctrl"), false);
+            bool alt = np.get<bool>(QStringLiteral("alt"), false);
+            bool shift = np.get<bool>(QStringLiteral("shift"), false);
 
             if (ctrl) XTestFakeKeyEvent (display, XKeysymToKeycode(display, XK_Control_L), True, 0);
             if (alt) XTestFakeKeyEvent (display, XKeysymToKeycode(display, XK_Alt_L), True, 0);
@@ -208,8 +243,11 @@ bool MousepadPlugin::handlePackageX11(const NetworkPackage &np)
                 }
 
                 //We use fakekey here instead of XTest (above) because it can handle utf characters instead of keycodes.
-                fakekey_press(m_fakekey, (const unsigned char*)key.toUtf8().constData(), -1, 0);
-                fakekey_release(m_fakekey);
+                for (int i=0;i<key.length();i++) {
+                    QByteArray utf8 = QString(key.at(i)).toUtf8();
+                    fakekey_press(m_fakekey, (const uchar*)utf8.constData(), utf8.size(), 0);
+                    fakekey_release(m_fakekey);
+                }
             }
 
             if (ctrl) XTestFakeKeyEvent (display, XKeysymToKeycode(display, XK_Control_L), False, 0);
@@ -226,6 +264,7 @@ bool MousepadPlugin::handlePackageX11(const NetworkPackage &np)
     }
     return true;
 }
+#endif
 
 #if HAVE_WAYLAND
 void MousepadPlugin::setupWaylandIntegration()
@@ -235,12 +274,12 @@ void MousepadPlugin::setupWaylandIntegration()
         return;
     }
     using namespace KWayland::Client;
-    ConnectionThread *connection = ConnectionThread::fromApplication(this);
+    ConnectionThread* connection = ConnectionThread::fromApplication(this);
     if (!connection) {
         // failed to get the Connection from Qt
         return;
     }
-    Registry *registry = new Registry(this);
+    Registry* registry = new Registry(this);
     registry->create(connection);
     connect(registry, &Registry::fakeInputAnnounced, this,
         [this, registry] (quint32 name, quint32 version) {
@@ -250,20 +289,20 @@ void MousepadPlugin::setupWaylandIntegration()
     registry->setup();
 }
 
-bool MousepadPlugin::handPackageWayland(const NetworkPackage &np)
+bool MousepadPlugin::handPackageWayland(const NetworkPackage& np)
 {
-    const float dx = np.get<float>("dx", 0);
-    const float dy = np.get<float>("dy", 0);
+    const float dx = np.get<float>(QStringLiteral("dx"), 0);
+    const float dy = np.get<float>(QStringLiteral("dy"), 0);
 
-    const bool isSingleClick = np.get<bool>("singleclick", false);
-    const bool isDoubleClick = np.get<bool>("doubleclick", false);
-    const bool isMiddleClick = np.get<bool>("middleclick", false);
-    const bool isRightClick = np.get<bool>("rightclick", false);
-    const bool isSingleHold = np.get<bool>("singlehold", false);
-    const bool isSingleRelease = np.get<bool>("singlerelease", false);
-    const bool isScroll = np.get<bool>("scroll", false);
-    const QString key = np.get<QString>("key", "");
-    const int specialKey = np.get<int>("specialKey", 0);
+    const bool isSingleClick = np.get<bool>(QStringLiteral("singleclick"), false);
+    const bool isDoubleClick = np.get<bool>(QStringLiteral("doubleclick"), false);
+    const bool isMiddleClick = np.get<bool>(QStringLiteral("middleclick"), false);
+    const bool isRightClick = np.get<bool>(QStringLiteral("rightclick"), false);
+    const bool isSingleHold = np.get<bool>(QStringLiteral("singlehold"), false);
+    const bool isSingleRelease = np.get<bool>(QStringLiteral("singlerelease"), false);
+    const bool isScroll = np.get<bool>(QStringLiteral("scroll"), false);
+    const QString key = np.get<QString>(QStringLiteral("key"), QLatin1String(""));
+    const int specialKey = np.get<int>(QStringLiteral("specialKey"), 0);
 
     if (isSingleClick || isDoubleClick || isMiddleClick || isRightClick || isSingleHold || isScroll || !key.isEmpty() || specialKey) {
 

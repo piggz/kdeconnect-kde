@@ -27,13 +27,17 @@ QtObject {
   
     id: root
     
-    property string deviceId: ""
-    property variant device: DeviceDbusInterfaceFactory.create(deviceId)
-    property bool available: false
+    property alias device: checker.device
+    readonly property alias available: checker.available
+
+    readonly property PluginChecker pluginChecker: PluginChecker {
+        id: checker
+        pluginName: "battery"
+    }
 
     property bool charging: false
     property int charge: -1
-    property string displayString: (available && charge > -1) ? ((charging) ? (i18n("Charging: %1%", charge)) : (i18n("Discharging: %1%", charge))) : i18n("No info")
+    property string displayString: (available && charge > -1) ? ((charging) ? (i18n("%1% charging", charge)) : (i18n("%1%", charge))) : i18n("No info")
     property variant battery: null
 
     property variant nested1: DBusAsyncResponse {
@@ -48,10 +52,9 @@ QtObject {
         onSuccess: root.charge = result
     }
     
-    // Note: magically called by qml
     onAvailableChanged: {
         if (available) {
-            battery = DeviceBatteryDbusInterfaceFactory.create(deviceId)
+            battery = DeviceBatteryDbusInterfaceFactory.create(device.id())
             
             battery.stateChanged.connect(function(c) {charging = c})
             battery.chargeChanged.connect(function(c) {charge = c})
@@ -61,20 +64,5 @@ QtObject {
         } else {
             battery = null
         }
-    }
-    
-    function pluginsChanged() {
-        var result = DBusResponseWaiter.waitForReply(device.hasPlugin("kdeconnect_battery"))
-      
-        if (result && result != "error") {
-            available = true
-        } else {
-            available = false
-        }      
-    }
-    
-    Component.onCompleted: {
-        device.pluginsChanged.connect(pluginsChanged)
-        device.pluginsChanged()
     }
 }

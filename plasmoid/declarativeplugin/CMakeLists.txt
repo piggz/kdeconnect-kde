@@ -6,7 +6,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 set(kdeconnectdeclarativeplugin_SRC
     kdeconnectdeclarativeplugin.cpp
     responsewaiter.cpp
-    processrunner.cpp
 )
 
 set(kdeconnectdeclarativeplugin_MOC
@@ -21,4 +20,4 @@ target_link_libraries(kdeconnectdeclarativeplugin
     kdeconnectinterfaces
 )
 install(TARGETS kdeconnectdeclarativeplugin DESTINATION ${QML_INSTALL_DIR}/org/kde/kdeconnect)
-install(FILES qmldir DESTINATION ${QML_INSTALL_DIR}/org/kde/kdeconnect)
+install(FILES qmldir qml/PluginChecker.qml qml/DBusProperty.qml DESTINATION ${QML_INSTALL_DIR}/org/kde/kdeconnect)

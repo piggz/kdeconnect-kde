@@ -20,8 +20,7 @@
 
 #include "clipboardplugin.h"
 
-#include <QClipboard>
-#include <QGuiApplication>
+#include "clipboardlistener.h"
 
 #include <KPluginFactory>
 
@@ -29,35 +28,23 @@ K_PLUGIN_FACTORY_WITH_JSON( KdeConnectPluginFactory, "kdeconnect_clipboard.json"
 
 Q_LOGGING_CATEGORY(KDECONNECT_PLUGIN_CLIPBOARD, "kdeconnect.plugin.clipboard")
 
-ClipboardPlugin::ClipboardPlugin(QObject *parent, const QVariantList &args)
+ClipboardPlugin::ClipboardPlugin(QObject* parent, const QVariantList& args)
     : KdeConnectPlugin(parent, args)
-    , clipboard(QGuiApplication::clipboard())
 {
-    connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(clipboardChanged(QClipboard::Mode)));
+    connect(ClipboardListener::instance(), &ClipboardListener::clipboardChanged,
+            this, &ClipboardPlugin::propagateClipboard);
 }
 
-void ClipboardPlugin::clipboardChanged(QClipboard::Mode mode)
+void ClipboardPlugin::propagateClipboard(const QString& content)
 {
-    if (mode != QClipboard::Clipboard) {
-        return;
-    }
-
-    QString content = clipboard->text();
-
-    if (content == currentContent) {
-        return;
-    }
-
-    currentContent = content;
-
-    NetworkPackage np(PACKAGE_TYPE_CLIPBOARD);
-    np.set("content", content);
+    NetworkPackage np(PACKAGE_TYPE_CLIPBOARD, {{"content", content}});
     sendPackage(np);
 }
 
 bool ClipboardPlugin::receivePackage(const NetworkPackage& np)
 {
-    clipboard->setText(np.get<QString>("content"));
+    QString content = np.get<QString>(QStringLiteral("content"));
+    ClipboardListener::instance()->setText(content);
     return true;
 }
 

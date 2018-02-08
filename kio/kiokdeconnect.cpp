@@ -30,7 +30,7 @@
 
 Q_LOGGING_CATEGORY(KDECONNECT_KIO, "kdeconnect.kio")
 
-extern "C" int Q_DECL_EXPORT kdemain(int argc, char **argv)
+extern "C" int Q_DECL_EXPORT kdemain(int argc, char** argv)
 {
     if (argc != 4) {
         fprintf(stderr, "Usage: kio_kdeconnect protocol pool app\n");
@@ -72,7 +72,7 @@ bool handleDBusError(QDBusReply<T>& reply, KIO::SlaveBase* slave)
     return false;
 }
 
-KioKdeconnect::KioKdeconnect(const QByteArray &pool, const QByteArray &app)
+KioKdeconnect::KioKdeconnect(const QByteArray& pool, const QByteArray& app)
     : SlaveBase("kdeconnect", pool, app),
     m_dbusInterface(new DaemonDbusInterface(this))
 {
@@ -84,35 +84,37 @@ void KioKdeconnect::listAllDevices()
     infoMessage(i18n("Listing devices..."));
 
     //TODO: Change to all devices and show different icons for connected and disconnected?
-    QStringList devices = m_dbusInterface->devices(true, true);
+    const QStringList devices = m_dbusInterface->devices(true, true);
 
-    totalSize(devices.length());
-
-    int i = 0;
-    Q_FOREACH(const QString& deviceId, devices) {
+    for (const QString& deviceId : devices) {
 
         DeviceDbusInterface interface(deviceId);
 
-        if (!interface.hasPlugin("kdeconnect_sftp")) continue;
+        if (!interface.hasPlugin(QStringLiteral("kdeconnect_sftp"))) continue;
 
-        const QString target = QString("kdeconnect://").append(deviceId).append("/");
+        const QString path = QStringLiteral("kdeconnect://").append(deviceId).append("/");
         const QString name = interface.name();
-        const QString icon = "kdeconnect";
+        const QString icon = QStringLiteral("kdeconnect");
 
         KIO::UDSEntry entry;
         entry.insert(KIO::UDSEntry::UDS_NAME, name);
         entry.insert(KIO::UDSEntry::UDS_ICON_NAME, icon);
         entry.insert(KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR);
-        entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
-        entry.insert(KIO::UDSEntry::UDS_MIME_TYPE, "");
-        entry.insert(KIO::UDSEntry::UDS_URL, target);
+        entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        entry.insert(KIO::UDSEntry::UDS_MIME_TYPE, QLatin1String(""));
+        entry.insert(KIO::UDSEntry::UDS_URL, path);
         listEntry(entry);
-
-        processedSize(i++);
-
     }
 
-    infoMessage("");
+    // We also need a non-null and writable UDSentry for "."
+    KIO::UDSEntry entry;
+    entry.insert(KIO::UDSEntry::UDS_NAME, QStringLiteral("."));
+    entry.insert(KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR);
+    entry.insert(KIO::UDSEntry::UDS_SIZE, 0);
+    entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    listEntry(entry);
+
+    infoMessage(QLatin1String(""));
     finished();
 }
 
@@ -123,54 +125,63 @@ void KioKdeconnect::listDevice()
     qCDebug(KDECONNECT_KIO) << "ListDevice" << m_currentDevice;
 
     SftpDbusInterface interface(m_currentDevice);
-    
+
     QDBusReply<bool> mountreply = interface.mountAndWait();
-    
+
     if (handleDBusError(mountreply, this)) {
         return;
     }
-    
+
     if (!mountreply.value()) {
         error(KIO::ERR_COULD_NOT_MOUNT, i18n("Could not mount device filesystem"));
         return;
     }
-    
+
     QDBusReply< QVariantMap > urlreply = interface.getDirectories();
-    
+
     if (handleDBusError(urlreply, this)) {
         return;
     }
-    
-    QVariantMap urls = urlreply.value();
-    
-    for (QVariantMap::iterator it = urls.begin(); it != urls.end(); it++) {
 
-        QString path = it.key();
-        QString name = it.value().toString();
+    QVariantMap urls = urlreply.value();
+
+    for (QVariantMap::iterator it = urls.begin(); it != urls.end(); ++it) {
+
+        const QString path = it.key();
+        const QString name = it.value().toString();
+        const QString icon = QStringLiteral("folder");
 
         KIO::UDSEntry entry;
-        entry.insert(KIO::UDSEntry::UDS_NAME, "files");
+        entry.insert(KIO::UDSEntry::UDS_NAME, QStringLiteral("files"));
         entry.insert(KIO::UDSEntry::UDS_DISPLAY_NAME, name);
-        entry.insert(KIO::UDSEntry::UDS_ICON_NAME, "folder");
+        entry.insert(KIO::UDSEntry::UDS_ICON_NAME, icon);
         entry.insert(KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR);
-        entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
-        entry.insert(KIO::UDSEntry::UDS_MIME_TYPE, "");
-        entry.insert(KIO::UDSEntry::UDS_URL, path);
+        entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        entry.insert(KIO::UDSEntry::UDS_MIME_TYPE, QLatin1String(""));
+        entry.insert(KIO::UDSEntry::UDS_URL, QUrl::fromLocalFile(path).toString());
         listEntry(entry);
     }
 
-    infoMessage("");
+    // We also need a non-null and writable UDSentry for "."
+    KIO::UDSEntry entry;
+    entry.insert(KIO::UDSEntry::UDS_NAME, QStringLiteral("."));
+    entry.insert(KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR);
+    entry.insert(KIO::UDSEntry::UDS_SIZE, 0);
+    entry.insert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    listEntry(entry);
+
+    infoMessage(QLatin1String(""));
     finished();
 
 }
 
 
 
-void KioKdeconnect::listDir(const QUrl &url)
+void KioKdeconnect::listDir(const QUrl& url)
 {
     qCDebug(KDECONNECT_KIO) << "Listing..." << url;
 
-    /// Url is not used here becuase all we could care about the url is the host, and that's already
+    /// Url is not used here because all we could care about the url is the host, and that's already
     /// handled in @p setHost
     Q_UNUSED(url);
 
@@ -187,7 +198,7 @@ void KioKdeconnect::listDir(const QUrl &url)
     }
 }
 
-void KioKdeconnect::stat(const QUrl &url)
+void KioKdeconnect::stat(const QUrl& url)
 {
     qCDebug(KDECONNECT_KIO) << "Stat: " << url;
 
@@ -198,14 +209,14 @@ void KioKdeconnect::stat(const QUrl &url)
     finished();
 }
 
-void KioKdeconnect::get(const QUrl &url)
+void KioKdeconnect::get(const QUrl& url)
 {
     qCDebug(KDECONNECT_KIO) << "Get: " << url;
-    mimeType("");
+    mimeType(QLatin1String(""));
     finished();
 }
 
-void KioKdeconnect::setHost(const QString &hostName, quint16 port, const QString &user, const QString &pass)
+void KioKdeconnect::setHost(const QString& hostName, quint16 port, const QString& user, const QString& pass)
 {
 
     //This is called before everything else to set the file we want to show

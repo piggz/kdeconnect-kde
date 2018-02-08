@@ -23,28 +23,47 @@
 
 #include <QObject>
 #include <QTcpServer>
+#include <QSslSocket>
 #include <QUdpSocket>
+#include <QTimer>
+#include <QNetworkSession>
+#include <QSslSocket>
 
-#include "../linkprovider.h"
-#include "netaddress.h"
+#include "kdeconnectcore_export.h"
+#include "backends/linkprovider.h"
+#include "server.h"
+#include "landevicelink.h"
 
-class LanLinkProvider
+class LanPairingHandler;
+class KDECONNECTCORE_EXPORT LanLinkProvider
     : public LinkProvider
 {
     Q_OBJECT
 
 public:
-    LanLinkProvider();
-    ~LanLinkProvider();
+    LanLinkProvider(bool testMode = false);
+    ~LanLinkProvider() override;
 
-    QString name() { return "LanLinkProvider"; }
-    int priority() { return PRIORITY_HIGH; }
+    QString name() override { return QStringLiteral("LanLinkProvider"); }
+    int priority() override { return PRIORITY_HIGH; }
+
+    void userRequestsPair(const QString& deviceId);
+    void userRequestsUnpair(const QString& deviceId);
+    void incomingPairPackage(DeviceLink* device, const NetworkPackage& np);
+
+    static void configureSslSocket(QSslSocket* socket, const QString& deviceId, bool isDeviceTrusted);
+    static void configureSocket(QSslSocket* socket);
+
+    const static quint16 UDP_PORT = 1716;
+    const static quint16 MIN_TCP_PORT = 1716;
+    const static quint16 MAX_TCP_PORT = 1764;
 
 public Q_SLOTS:
-    virtual void onNetworkChange();
-    virtual void onStart();
-    virtual void onStop();
+    void onNetworkChange() override;
+    void onStart() override;
+    void onStop() override;
     void connected();
+    void encrypted();
     void connectError();
 
 private Q_SLOTS:
@@ -52,24 +71,30 @@ private Q_SLOTS:
     void newConnection();
     void dataReceived();
     void deviceLinkDestroyed(QObject* destroyedDeviceLink);
+    void sslErrors(const QList<QSslError>& errors);
+    void broadcastToNetwork();
 
 private:
-    static void configureSocket(QTcpSocket* socket);
+    LanPairingHandler* createPairingHandler(DeviceLink* link);
 
-    QTcpServer* mTcpServer;
-    QUdpSocket* mUdpServer;
-    QUdpSocket mUdpSocket;
-    const static quint16 port = 1714;
-    quint16 mTcpPort;
+    void onNetworkConfigurationChanged(const QNetworkConfiguration& config);
+    void addLink(const QString& deviceId, QSslSocket* socket, NetworkPackage* receivedPackage, LanDeviceLink::ConnectionStarted connectionOrigin);
 
-    QMap<QString, DeviceLink*> mLinks;
+    Server* m_server;
+    QUdpSocket m_udpSocket;
+    quint16 m_tcpPort;
+
+    QMap<QString, LanDeviceLink*> m_links;
+    QMap<QString, LanPairingHandler*> m_pairingHandlers;
 
     struct PendingConnect {
         NetworkPackage* np;
         QHostAddress sender;
     };
-    QMap<QTcpSocket*, PendingConnect> receivedIdentityPackages;
-
+    QMap<QSslSocket*, PendingConnect> m_receivedIdentityPackages;
+    QNetworkConfiguration m_lastConfig;
+    const bool m_testMode;
+    QTimer m_combineBroadcastsTimer;
 };
 
 #endif

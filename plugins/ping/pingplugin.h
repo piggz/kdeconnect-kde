@@ -25,7 +25,7 @@
 
 #include <core/kdeconnectplugin.h>
 
-#define PACKAGE_TYPE_PING QLatin1String("kdeconnect.ping")
+#define PACKAGE_TYPE_PING QStringLiteral("kdeconnect.ping")
 
 class Q_DECL_EXPORT PingPlugin
     : public KdeConnectPlugin
@@ -34,18 +34,16 @@ class Q_DECL_EXPORT PingPlugin
     Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.device.ping")
 
 public:
-    explicit PingPlugin(QObject *parent, const QVariantList &args);
-    virtual ~PingPlugin();
+    explicit PingPlugin(QObject* parent, const QVariantList& args);
+    ~PingPlugin() override;
 
     Q_SCRIPTABLE void sendPing();
     Q_SCRIPTABLE void sendPing(const QString& customMessage);
 
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override {}
 
-private:
-    QString dbusPath() const;
+    QString dbusPath() const override;
 };
 
 #endif

@@ -25,7 +25,6 @@
 LoopbackLinkProvider::LoopbackLinkProvider()
     : identityPackage(PACKAGE_TYPE_IDENTITY)
 {
-    loopbackDeviceLink = 0;
     NetworkPackage::createIdentityPackage(&identityPackage);
 }
 
@@ -36,7 +35,7 @@ LoopbackLinkProvider::~LoopbackLinkProvider()
 
 void LoopbackLinkProvider::onNetworkChange()
 {
-    LoopbackDeviceLink* newLoopbackDeviceLink = new LoopbackDeviceLink("loopback", this);
+    LoopbackDeviceLink* newLoopbackDeviceLink = new LoopbackDeviceLink(QStringLiteral("loopback"), this);
     Q_EMIT onConnectionReceived(identityPackage, newLoopbackDeviceLink);
 
     if (loopbackDeviceLink) {
@@ -55,7 +54,6 @@ void LoopbackLinkProvider::onStop()
 {
     if (loopbackDeviceLink) {
         delete loopbackDeviceLink;
-        loopbackDeviceLink = 0;
     }
 }
 

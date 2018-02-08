@@ -26,7 +26,7 @@
 
 #include <core/kdeconnectplugin.h>
 
-#define PACKAGE_TYPE_SHARE QLatin1String("kdeconnect.share")
+#define PACKAGE_TYPE_SHARE_REQUEST QStringLiteral("kdeconnect.share.request")
 
 class SharePlugin
     : public KdeConnectPlugin
@@ -35,22 +35,25 @@ class SharePlugin
     Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.device.share")
 
 public:
-    explicit SharePlugin(QObject *parent, const QVariantList &args);
+    explicit SharePlugin(QObject* parent, const QVariantList& args);
 
     ///Helper method, QDBus won't recognize QUrl
     Q_SCRIPTABLE void shareUrl(const QString& url) { shareUrl(QUrl(url)); }
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
+
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override {}
+    QString dbusPath() const override;
 
 private Q_SLOTS:
     void finished(KJob*);
     void openDestinationFolder();
 
+Q_SIGNALS:
+    void shareReceived(const QString& url);
+
 private:
     void shareUrl(const QUrl& url);
 
-    QString dbusPath() const;
     QUrl destinationDir() const;
 
 };

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>949</width>
+    <width>965</width>
     <height>528</height>
    </rect>
   </property>
@@ -70,7 +70,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="edit-rename"/>
+           <iconset theme="edit-rename">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -91,7 +92,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="dialog-ok"/>
+           <iconset theme="dialog-ok">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -152,6 +154,9 @@
               <property name="text">
                <string>Device</string>
               </property>
+              <property name="textFormat">
+               <enum>Qt::PlainText</enum>
+              </property>
              </widget>
             </item>
             <item>
@@ -196,6 +201,20 @@
               </property>
               <property name="value">
                <number>-1</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="accept_button">
+              <property name="text">
+               <string>Accept</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="reject_button">
+              <property name="text">
+               <string>Reject</string>
               </property>
              </widget>
             </item>
@@ -264,29 +283,6 @@
        <widget class="QWidget" name="noDevicePlaceholder" native="true">
         <layout class="QVBoxLayout" name="noDevicePlaceholder_layout">
          <item>
-          <spacer name="verticalSpacer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLabel" name="noDeviceLabel">
-           <property name="text">
-            <string>No device selected.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QLabel" name="noDeviceLinks">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -295,7 +291,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>If you have an Android phone, make sure to install the &lt;a href=&quot;https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;KDE Connect Android app&lt;/span&gt;&lt;/a&gt; (also available &lt;a href=&quot;https://f-droid.org/repository/browse/?fdid=org.kde.kdeconnect_tp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;from F-Droid&lt;/span&gt;&lt;/a&gt;).</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;No device selected.&lt;br&gt;&lt;br&gt;If you own an Android device, make sure to install the &lt;a href=&quot;https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#4c6b8a;&quot;&gt;KDE Connect Android app&lt;/span&gt;&lt;/a&gt; (also available &lt;a href=&quot;https://f-droid.org/repository/browse/?fdid=org.kde.kdeconnect_tp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#4c6b8a;&quot;&gt;from F-Droid&lt;/span&gt;&lt;/a&gt;) and it should appear in the list.&lt;br&gt;&lt;br&gt;If you are having problems, visit the &lt;a href=&quot;https://community.kde.org/KDEConnect&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#4c6b8a;&quot;&gt;KDE Connect Community wiki&lt;/span&gt;&lt;/a&gt; for help.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="textFormat">
             <enum>Qt::RichText</enum>
@@ -316,19 +312,6 @@
             <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </widget>

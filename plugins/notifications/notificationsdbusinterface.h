@@ -26,6 +26,7 @@
 #include <QString>
 #include <QStringList>
 #include <QDir>
+#include <QPointer>
 
 #include "notification.h"
 
@@ -40,32 +41,34 @@ class NotificationsDbusInterface
 
 public:
     explicit NotificationsDbusInterface(KdeConnectPlugin* plugin);
-    virtual ~NotificationsDbusInterface();
+    ~NotificationsDbusInterface() override;
 
     void processPackage(const NetworkPackage& np);
     void clearNotifications();
+    void dismissRequested(const QString& notification);
+    void replyRequested(Notification* noti);
+    void addNotification(Notification* noti);
 
 public Q_SLOTS:
     Q_SCRIPTABLE QStringList activeNotifications();
-    void dismissRequested(Notification* notification);
+    Q_SCRIPTABLE void sendReply(const QString& replyId, const QString& message);
 
 Q_SIGNALS:
     Q_SCRIPTABLE void notificationPosted(const QString& publicId);
     Q_SCRIPTABLE void notificationRemoved(const QString& publicId);
+    Q_SCRIPTABLE void notificationUpdated(const QString& publicId);
+    Q_SCRIPTABLE void allNotificationsRemoved();
 
 private /*methods*/:
-    void addNotification(Notification* noti);
     void removeNotification(const QString& internalId);
     QString newId(); //Generates successive identifitiers to use as public ids
 
 private /*attributes*/:
-    const Device* mDevice;
-    KdeConnectPlugin* mPlugin;
-    QHash<QString, Notification*> mNotifications;
-    QHash<QString, QString> mInternalIdToPublicId;
-    int mLastId;
-    QDir imagesDir;
-
+    const Device* m_device;
+    KdeConnectPlugin* m_plugin;
+    QHash<QString, QPointer<Notification>> m_notifications;
+    QHash<QString, QString> m_internalIdToPublicId;
+    int m_lastId;
 };
 
 #endif

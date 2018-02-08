@@ -20,54 +20,70 @@
 
 #include "telephonyplugin.h"
 
+#include "sendreplydialog.h"
+
 #include <KLocalizedString>
 #include <QIcon>
 #include <QDebug>
+#include <QDBusReply>
 
 #include <KPluginFactory>
-
 
 K_PLUGIN_FACTORY_WITH_JSON( KdeConnectPluginFactory, "kdeconnect_telephony.json", registerPlugin< TelephonyPlugin >(); )
 
 Q_LOGGING_CATEGORY(KDECONNECT_PLUGIN_TELEPHONY, "kdeconnect.plugin.telephony")
 
-TelephonyPlugin::TelephonyPlugin(QObject *parent, const QVariantList &args)
+TelephonyPlugin::TelephonyPlugin(QObject* parent, const QVariantList& args)
     : KdeConnectPlugin(parent, args)
+    , m_telepathyInterface(QStringLiteral("org.freedesktop.Telepathy.ConnectionManager.kdeconnect"), QStringLiteral("/kdeconnect"))
 {
-
 }
 
 KNotification* TelephonyPlugin::createNotification(const NetworkPackage& np)
 {
+    const QString event = np.get<QString>(QStringLiteral("event"));
+    const QString phoneNumber = np.get<QString>(QStringLiteral("phoneNumber"), i18n("unknown number"));
+    const QString contactName = np.get<QString>(QStringLiteral("contactName"), phoneNumber);
+    const QByteArray phoneThumbnail = QByteArray::fromBase64(np.get<QByteArray>(QStringLiteral("phoneThumbnail"), ""));
 
-    const QString event = np.get<QString>("event");
-    const QString phoneNumber = np.get<QString>("phoneNumber", i18n("unknown number"));
+    // In case telepathy can handle the message, don't do anything else
+    if (event == QLatin1String("sms") && m_telepathyInterface.isValid()) {
+        qCDebug(KDECONNECT_PLUGIN_TELEPHONY) << "Passing a text message to the telepathy interface";
+        connect(&m_telepathyInterface, SIGNAL(messageReceived(QString,QString)), SLOT(sendSms(QString,QString)), Qt::UniqueConnection);
+        const QString messageBody = np.get<QString>(QStringLiteral("messageBody"),QLatin1String(""));
+        QDBusReply<bool> reply = m_telepathyInterface.call(QStringLiteral("sendMessage"), phoneNumber, contactName, messageBody);
+        if (reply) {
+            return nullptr;
+        } else {
+            qCDebug(KDECONNECT_PLUGIN_TELEPHONY) << "Telepathy failed, falling back to the default handling";
+        }
+    }
 
     QString content, type, icon;
     KNotification::NotificationFlags flags = KNotification::CloseOnTimeout;
 
     const QString title = device()->name();
 
-    if (event == "ringing") {
+    if (event == QLatin1String("ringing")) {
         type = QStringLiteral("callReceived");
         icon = QStringLiteral("call-start");
-        content = i18n("Incoming call from %1", phoneNumber);
-    } else if (event == "missedCall") {
+        content = i18n("Incoming call from %1", contactName);
+    } else if (event == QLatin1String("missedCall")) {
         type = QStringLiteral("missedCall");
         icon = QStringLiteral("call-start");
-        content = i18n("Missed call from %1", phoneNumber);
-        flags = KNotification::Persistent;
-    } else if (event == "sms") {
+        content = i18n("Missed call from %1", contactName);
+        flags |= KNotification::Persistent; //Note that in Unity this generates a message box!
+    } else if (event == QLatin1String("sms")) {
         type = QStringLiteral("smsReceived");
         icon = QStringLiteral("mail-receive");
-        QString messageBody = np.get<QString>("messageBody","");
-        content = i18n("SMS from %1<br>%2", phoneNumber, messageBody);
-        flags = KNotification::Persistent;
-    } else if (event == "talking") {
-        return NULL;
+        QString messageBody = np.get<QString>(QStringLiteral("messageBody"), QLatin1String(""));
+        content = i18n("SMS from %1<br>%2", contactName, messageBody);
+        flags |= KNotification::Persistent; //Note that in Unity this generates a message box!
+    } else if (event == QLatin1String("talking")) {
+        return nullptr;
     } else {
 #ifndef NDEBUG
-        return NULL;
+        return nullptr;
 #else
         type = QStringLiteral("callReceived");
         icon = QStringLiteral("phone");
@@ -78,14 +94,27 @@ KNotification* TelephonyPlugin::createNotification(const NetworkPackage& np)
     qCDebug(KDECONNECT_PLUGIN_TELEPHONY) << "Creating notification with type:" << type;
 
     KNotification* notification = new KNotification(type, flags, this);
-    notification->setIconName(icon);
-    notification->setComponentName("kdeconnect");
+    if (!phoneThumbnail.isEmpty()) {
+        QPixmap photo;
+        photo.loadFromData(phoneThumbnail, "JPEG");
+        notification->setPixmap(photo);
+    } else {
+        notification->setIconName(icon);
+    }
+    notification->setComponentName(QStringLiteral("kdeconnect"));
     notification->setTitle(title);
     notification->setText(content);
 
     if (event == QLatin1String("ringing")) {
         notification->setActions( QStringList(i18n("Mute Call")) );
         connect(notification, &KNotification::action1Activated, this, &TelephonyPlugin::sendMutePackage);
+    } else if (event == QLatin1String("sms")) {
+        const QString messageBody = np.get<QString>(QStringLiteral("messageBody"),QLatin1String(""));
+        notification->setActions( QStringList(i18n("Reply")) );
+        notification->setProperty("phoneNumber", phoneNumber);
+        notification->setProperty("contactName", contactName);
+        notification->setProperty("originalMessage", messageBody);
+        connect(notification, &KNotification::action1Activated, this, &TelephonyPlugin::showSendSmsDialog);
     }
 
     return notification;
@@ -94,28 +123,48 @@ KNotification* TelephonyPlugin::createNotification(const NetworkPackage& np)
 
 bool TelephonyPlugin::receivePackage(const NetworkPackage& np)
 {
-    if (np.get<bool>("isCancel")) {
+    if (np.get<bool>(QStringLiteral("isCancel"))) {
 
-        //It would be awesome to remove the old notification from the system tray here, but there is no way to do it :(
-        //Now I realize why at the end of the day I have hundreds of notifications from facebook messages that I HAVE ALREADY READ,
-        //...it's just because the telepathy client has no way to remove them! even when it knows that I have read those messages!
-
-    } else {
-
-        KNotification* n = createNotification(np);
-        if (n != NULL) n->sendEvent();
-
+        //TODO: Clear the old notification
+        return true;
     }
 
-    return true;
+    KNotification* n = createNotification(np);
+    if (n != nullptr) n->sendEvent();
 
+    return true;
 }
 
 void TelephonyPlugin::sendMutePackage()
 {
-    NetworkPackage package(PACKAGE_TYPE_TELEPHONY);
-    package.set<QString>( "action", "mute" );
+    NetworkPackage package(PACKAGE_TYPE_TELEPHONY_REQUEST, {{"action", "mute"}});
     sendPackage(package);
+}
+
+void TelephonyPlugin::sendSms(const QString& phoneNumber, const QString& messageBody)
+{
+    NetworkPackage np(PACKAGE_TYPE_SMS_REQUEST, {
+        {"sendSms", true},
+        {"phoneNumber", phoneNumber},
+        {"messageBody", messageBody}
+    });
+    sendPackage(np);
+}
+
+void TelephonyPlugin::showSendSmsDialog()
+{
+    QString phoneNumber = sender()->property("phoneNumber").toString();
+    QString contactName = sender()->property("contactName").toString();
+    QString originalMessage = sender()->property("originalMessage").toString();
+    SendReplyDialog* dialog = new SendReplyDialog(originalMessage, phoneNumber, contactName);
+    connect(dialog, &SendReplyDialog::sendReply, this, &TelephonyPlugin::sendSms);
+    dialog->show();
+    dialog->raise();
+}
+
+QString TelephonyPlugin::dbusPath() const
+{
+    return "/modules/kdeconnect/devices/" + device()->id() + "/telephony";
 }
 
 #include "telephonyplugin.moc"

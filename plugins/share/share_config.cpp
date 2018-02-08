@@ -28,13 +28,14 @@
 
 K_PLUGIN_FACTORY(ShareConfigFactory, registerPlugin<ShareConfig>();)
 
-ShareConfig::ShareConfig(QWidget *parent, const QVariantList& args)
-    : KdeConnectPluginKcm(parent, args, "kdeconnect_share_config")
+ShareConfig::ShareConfig(QWidget* parent, const QVariantList& args)
+    : KdeConnectPluginKcm(parent, args, QStringLiteral("kdeconnect_share_config"))
     , m_ui(new Ui::ShareConfigUi())
 {
     m_ui->setupUi(this);
     // xgettext:no-c-format
-    m_ui->commentLabel->setText(i18n("%1 in the path will be replaced with the specific device name."));
+    m_ui->commentLabel->setTextFormat(Qt::RichText);
+    m_ui->commentLabel->setText(i18n("&percnt;1 in the path will be replaced with the specific device name."));
 
     connect(m_ui->kurlrequester, SIGNAL(textChanged(QString)), this, SLOT(changed()));
 }
@@ -48,7 +49,7 @@ void ShareConfig::defaults()
 {
     KCModule::defaults();
 
-    m_ui->kurlrequester->setUrl(QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)));
+    m_ui->kurlrequester->setText(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
 
     Q_EMIT changed(true);
 }
@@ -57,14 +58,15 @@ void ShareConfig::load()
 {
     KCModule::load();
 
-    m_ui->kurlrequester->setUrl(QUrl::fromLocalFile(config()->get("incoming_path", QStandardPaths::writableLocation(QStandardPaths::DownloadLocation))));
+    const auto standardPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    m_ui->kurlrequester->setText(config()->get<QString>(QStringLiteral("incoming_path"), standardPath));
 
     Q_EMIT changed(false);
 }
 
 void ShareConfig::save()
 {
-    config()->set("incoming_path", m_ui->kurlrequester->text());
+    config()->set(QStringLiteral("incoming_path"), m_ui->kurlrequester->text());
 
     KCModule::save();
 

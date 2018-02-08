@@ -25,26 +25,26 @@
 #include <QDBusInterface>
 
 #include <KSharedConfig>
-#include <KConfigGroup>
 #include <QIcon>
 
 //#include "modeltest.h"
 
 NotificationsModel::NotificationsModel(QObject* parent)
     : QAbstractListModel(parent)
-    , m_dbusInterface(0)
+    , m_dbusInterface(nullptr)
 {
 
     //new ModelTest(this, this);
 
-    connect(this, SIGNAL(rowsInserted(QModelIndex, int, int)),
-            this, SIGNAL(rowsChanged()));
-    connect(this, SIGNAL(rowsRemoved(QModelIndex, int, int)),
-            this, SIGNAL(rowsChanged()));
+    connect(this, &QAbstractItemModel::rowsInserted,
+            this, &NotificationsModel::rowsChanged);
+    connect(this, &QAbstractItemModel::rowsRemoved,
+            this, &NotificationsModel::rowsChanged);
 
-    connect(this, SIGNAL(dataChanged(QModelIndex, QModelIndex)),
-            this, SIGNAL(anyDismissableChanged()));
-
+    connect(this, &QAbstractItemModel::dataChanged,
+            this, &NotificationsModel::anyDismissableChanged);
+    connect(this, &QAbstractItemModel::rowsInserted,
+            this, &NotificationsModel::anyDismissableChanged);
 
     QDBusServiceWatcher* watcher = new QDBusServiceWatcher(DaemonDbusInterface::activatedService(),
                                                            QDBusConnection::sessionBus(), QDBusServiceWatcher::WatchForOwnerChange, this);
@@ -60,6 +60,10 @@ QHash<int, QByteArray> NotificationsModel::roleNames() const
     names.insert(AppNameModelRole,     "appName");
     names.insert(IdModelRole,          "notificationId");
     names.insert(DismissableModelRole, "dismissable");
+    names.insert(RepliableModelRole, "repliable");
+    names.insert(IconPathModelRole, "appIcon");
+    names.insert(TitleModelRole, "title");
+    names.insert(TextModelRole, "notitext");
     return names;
 }
 
@@ -82,10 +86,14 @@ void NotificationsModel::setDeviceId(const QString& deviceId)
 
     m_dbusInterface = new DeviceNotificationsDbusInterface(deviceId, this);
 
-    connect(m_dbusInterface, SIGNAL(notificationPosted(QString)),
-            this, SLOT(notificationAdded(QString)));
-    connect(m_dbusInterface, SIGNAL(notificationRemoved(QString)),
-            this, SLOT(notificationRemoved(QString)));
+    connect(m_dbusInterface, &OrgKdeKdeconnectDeviceNotificationsInterface::notificationPosted,
+            this, &NotificationsModel::notificationAdded);
+    connect(m_dbusInterface, &OrgKdeKdeconnectDeviceNotificationsInterface::notificationRemoved,
+            this, &NotificationsModel::notificationRemoved);
+    connect(m_dbusInterface, &OrgKdeKdeconnectDeviceNotificationsInterface::allNotificationsRemoved,
+            this, &NotificationsModel::clearNotifications);
+    connect(m_dbusInterface, &OrgKdeKdeconnectDeviceNotificationsInterface::notificationUpdated,
+            this, &NotificationsModel::notificationUpdated);
 
     refreshNotificationList();
 
@@ -94,16 +102,24 @@ void NotificationsModel::setDeviceId(const QString& deviceId)
 
 void NotificationsModel::notificationAdded(const QString& id)
 {
-    //TODO: Actually add instead of refresh
-    Q_UNUSED(id);
-    refreshNotificationList();
+    int currentSize = m_notificationList.size();
+    beginInsertRows(QModelIndex(),  currentSize, currentSize);
+    NotificationDbusInterface* dbusInterface = new NotificationDbusInterface(m_deviceId, id, this);
+    m_notificationList.append(dbusInterface);
+    endInsertRows();
 }
 
 void NotificationsModel::notificationRemoved(const QString& id)
 {
-    //TODO: Actually remove instead of refresh
-    Q_UNUSED(id);
-    refreshNotificationList();
+    for (int i = 0; i < m_notificationList.size(); ++i) {
+        if (m_notificationList[i]->notificationId() == id) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_notificationList.removeAt(i);
+            endRemoveRows();
+            return;
+        }
+    }
+    qCWarning(KDECONNECT_INTERFACES) << "Attempted to remove unknown notification: " << id;
 }
 
 void NotificationsModel::refreshNotificationList()
@@ -120,10 +136,10 @@ void NotificationsModel::refreshNotificationList()
     }
 
     QDBusPendingReply<QStringList> pendingNotificationIds = m_dbusInterface->activeNotifications();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingNotificationIds, this);
+    QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(pendingNotificationIds, this);
 
-    QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                     this, SLOT(receivedNotifications(QDBusPendingCallWatcher*)));
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
+                     this, &NotificationsModel::receivedNotifications);
 }
 
 void NotificationsModel::receivedNotifications(QDBusPendingCallWatcher* watcher)
@@ -132,7 +148,6 @@ void NotificationsModel::receivedNotifications(QDBusPendingCallWatcher* watcher)
     clearNotifications();
     QDBusPendingReply<QStringList> pendingNotificationIds = *watcher;
 
-    clearNotifications();
     if (pendingNotificationIds.isError()) {
         qCWarning(KDECONNECT_INTERFACES) << pendingNotificationIds.error();
         return;
@@ -144,7 +159,7 @@ void NotificationsModel::receivedNotifications(QDBusPendingCallWatcher* watcher)
     }
 
     beginInsertRows(QModelIndex(), 0, notificationIds.size() - 1);
-    Q_FOREACH (const QString& notificationId, notificationIds) {
+    for (const QString& notificationId : notificationIds) {
         NotificationDbusInterface* dbusInterface = new NotificationDbusInterface(m_deviceId, notificationId, this);
         m_notificationList.append(dbusInterface);
     }
@@ -170,7 +185,7 @@ QVariant NotificationsModel::data(const QModelIndex& index, int role) const
     //FIXME: This function gets called lots of times, producing lots of dbus calls. Add a cache?
     switch (role) {
         case IconModelRole:
-            return QIcon::fromTheme("device-notifier");
+            return QIcon::fromTheme(QStringLiteral("device-notifier"));
         case IdModelRole:
             return notification->internalId();
         case NameModelRole:
@@ -183,6 +198,14 @@ QVariant NotificationsModel::data(const QModelIndex& index, int role) const
             return qVariantFromValue<QObject*>(notification);
         case DismissableModelRole:
             return notification->dismissable();
+        case RepliableModelRole:
+            return !notification->replyId().isEmpty();
+        case IconPathModelRole:
+            return notification->iconPath();
+        case TitleModelRole:
+            return notification->title();
+        case TextModelRole:
+            return notification->text();
         default:
              return QVariant();
     }
@@ -191,12 +214,12 @@ QVariant NotificationsModel::data(const QModelIndex& index, int role) const
 NotificationDbusInterface* NotificationsModel::getNotification(const QModelIndex& index) const
 {
     if (!index.isValid()) {
-        return NULL;
+        return nullptr;
     }
 
     int row = index.row();
     if (row < 0 || row >= m_notificationList.size()) {
-        return NULL;
+        return nullptr;
     }
 
     return m_notificationList[row];
@@ -214,7 +237,7 @@ int NotificationsModel::rowCount(const QModelIndex& parent) const
 
 bool NotificationsModel::isAnyDimissable() const
 {
-    Q_FOREACH (NotificationDbusInterface* notification, m_notificationList) {
+    for (NotificationDbusInterface* notification : qAsConst(m_notificationList)) {
         if (notification->dismissable()) {
             return true;
         }
@@ -224,7 +247,7 @@ bool NotificationsModel::isAnyDimissable() const
 
 void NotificationsModel::dismissAll()
 {
-    Q_FOREACH (NotificationDbusInterface* notification, m_notificationList) {
+    for (NotificationDbusInterface* notification : qAsConst(m_notificationList)) {
         if (notification->dismissable()) {
             notification->dismiss();
         }
@@ -239,4 +262,10 @@ void NotificationsModel::clearNotifications()
         m_notificationList.clear();
         endRemoveRows();
     }
+}
+
+void NotificationsModel::notificationUpdated(const QString& id)
+{
+    //TODO only emit the affected indices
+    Q_EMIT dataChanged(index(0,0), index(m_notificationList.size() - 1, 0));
 }

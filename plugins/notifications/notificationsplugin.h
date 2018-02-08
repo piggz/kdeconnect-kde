@@ -24,7 +24,9 @@
 #include <knotification.h>
 
 #include <core/kdeconnectplugin.h>
-#define PACKAGE_TYPE_NOTIFICATION QLatin1String("kdeconnect.notification")
+
+#define PACKAGE_TYPE_NOTIFICATION_REQUEST QStringLiteral("kdeconnect.notification.request")
+#define PACKAGE_TYPE_NOTIFICATION_REPLY QStringLiteral("kdeconnect.notification.reply")
 
 /*
  * This class is just a proxy for NotificationsDbusInterface
@@ -32,6 +34,7 @@
  * KdeConnectPlugin at the same time (both are QObject)
  */
 class NotificationsDbusInterface;
+class NotificationsListener;
 
 class NotificationsPlugin
     : public KdeConnectPlugin
@@ -39,15 +42,15 @@ class NotificationsPlugin
     Q_OBJECT
 
 public:
-    explicit NotificationsPlugin(QObject *parent, const QVariantList &args);
-    virtual ~NotificationsPlugin();
+    explicit NotificationsPlugin(QObject* parent, const QVariantList& args);
+    ~NotificationsPlugin() override;
     
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override;
 
-private:
+protected:
     NotificationsDbusInterface* notificationsDbusInterface;
+    NotificationsListener* notificationsListener;
 
 };
 

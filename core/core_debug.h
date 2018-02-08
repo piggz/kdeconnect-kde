@@ -23,6 +23,10 @@
 
 #include <QLoggingCategory>
 
-Q_DECLARE_LOGGING_CATEGORY(KDECONNECT_CORE)
+#include "kdeconnectcore_export.h"
+
+KDECONNECTCORE_EXPORT Q_DECLARE_LOGGING_CATEGORY(KDECONNECT_CORE)
+
+void logBacktrace();
 
 #endif //CORE_DEBUG_H

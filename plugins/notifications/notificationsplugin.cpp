@@ -37,13 +37,13 @@ NotificationsPlugin::NotificationsPlugin(QObject* parent, const QVariantList& ar
 
 void NotificationsPlugin::connected()
 {
-    NetworkPackage np(PACKAGE_TYPE_NOTIFICATION);
-    np.set("request", true);
+    NetworkPackage np(PACKAGE_TYPE_NOTIFICATION_REQUEST, {{"request", true}});
     sendPackage(np);
 }
 
 NotificationsPlugin::~NotificationsPlugin()
 {
+    qCDebug(KDECONNECT_PLUGIN_NOTIFICATION) << "Destroying NotificationsPlugin";
     //FIXME: Qt dbus does not allow to remove an adaptor! (it causes a crash in
     // the next dbus access to its parent). The implication of not deleting this
     // is that disabling the plugin leaks the interface. As a mitigation we are
@@ -54,7 +54,7 @@ NotificationsPlugin::~NotificationsPlugin()
 
 bool NotificationsPlugin::receivePackage(const NetworkPackage& np)
 {
-    if (np.get<bool>("request")) return false;
+    if (np.get<bool>(QStringLiteral("request"))) return false;
 
     notificationsDbusInterface->processPackage(np);
 

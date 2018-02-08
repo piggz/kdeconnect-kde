@@ -32,13 +32,13 @@ class ShareConfig
 {
     Q_OBJECT
 public:
-    ShareConfig(QWidget *parent, const QVariantList&);
-    virtual ~ShareConfig();
+    ShareConfig(QWidget* parent, const QVariantList&);
+    ~ShareConfig() override;
 
 public Q_SLOTS:
-    virtual void save();
-    virtual void load();
-    virtual void defaults();
+    void save() override;
+    void load() override;
+    void defaults() override;
 
 private:
     Ui::ShareConfigUi* m_ui;

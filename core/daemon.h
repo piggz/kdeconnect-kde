@@ -26,6 +26,7 @@
 #include <QMap>
 
 #include "kdeconnectcore_export.h"
+#include "device.h"
 
 class NetworkPackage;
 class DeviceLink;
@@ -37,44 +38,58 @@ class KDECONNECTCORE_EXPORT Daemon
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.daemon")
+    Q_PROPERTY(bool isDiscoveringDevices READ isDiscoveringDevices)
+    Q_PROPERTY(QStringList pairingRequests READ pairingRequests NOTIFY pairingRequestsChanged)
 
 public:
-    Daemon(QObject *parent);
-    ~Daemon();
+    explicit Daemon(QObject* parent, bool testMode = false);
+    ~Daemon() override;
 
-public Q_SLOTS:
-    /**
-     * Returns the daemon.
-     *
-     * Note this can't be called before constructing the Daemon.
-     */
     static Daemon* instance();
 
-    //After calling this, signal deviceDiscovered will be triggered for each device
-    Q_SCRIPTABLE void setDiscoveryEnabled(bool b);
+    QList<Device*> devicesList() const;
+
+    virtual void askPairingConfirmation(Device* device) = 0;
+    virtual void reportError(const QString& title, const QString& description) = 0;
+    virtual QNetworkAccessManager* networkAccessManager();
+
+    Device* getDevice(const QString& deviceId);
+
+    QStringList pairingRequests() const;
+
+    Q_SCRIPTABLE QString selfId() const;
+public Q_SLOTS:
+    Q_SCRIPTABLE void acquireDiscoveryMode(const QString& id);
+    Q_SCRIPTABLE void releaseDiscoveryMode(const QString& id);
 
     Q_SCRIPTABLE void forceOnNetworkChange();
 
+    ///don't try to turn into Q_PROPERTY, it doesn't work
     Q_SCRIPTABLE QString announcedName();
-    Q_SCRIPTABLE void setAnnouncedName(QString name);
+    Q_SCRIPTABLE void setAnnouncedName(const QString& name);
 
     //Returns a list of ids. The respective devices can be manipulated using the dbus path: "/modules/kdeconnect/Devices/"+id
-    Q_SCRIPTABLE QStringList devices(bool onlyReachable = false, bool onlyVisible = false) const;
+    Q_SCRIPTABLE QStringList devices(bool onlyReachable = false, bool onlyPaired = false) const;
 
-    virtual void requestPairing(Device *d) = 0;
-    virtual void reportError(const QString &title, const QString &description) = 0;
-    virtual QNetworkAccessManager* networkAccessManager();
+    Q_SCRIPTABLE QString deviceIdByName(const QString& name) const;
 
 Q_SIGNALS:
     Q_SCRIPTABLE void deviceAdded(const QString& id);
     Q_SCRIPTABLE void deviceRemoved(const QString& id); //Note that paired devices will never be removed
     Q_SCRIPTABLE void deviceVisibilityChanged(const QString& id, bool isVisible);
+    Q_SCRIPTABLE void announcedNameChanged(const QString& announcedName);
+    Q_SCRIPTABLE void pairingRequestsChanged();
 
 private Q_SLOTS:
     void onNewDeviceLink(const NetworkPackage& identityPackage, DeviceLink* dl);
     void onDeviceStatusChanged();
 
 private:
+    void addDevice(Device* device);
+    bool isDiscoveringDevices() const;
+    void removeDevice(Device* d);
+    void cleanDevices();
+
     QScopedPointer<struct DaemonPrivate> d;
 };
 

@@ -55,21 +55,21 @@ bool MprisRemotePlugin::receivePackage(const NetworkPackage& np)
     if (np.type() != PACKAGE_TYPE_MPRIS)
         return false;
 
-    if (np.has("nowPlaying") || np.has("volume") || np.has("isPlaying") || np.has("length") || np.has("pos")) {
-        if (np.get<QString>("player") == m_player) {
-            m_nowPlaying = np.get<QString>("nowPlaying", m_nowPlaying);
-            m_volume = np.get<int>("volume", m_volume);
-            m_length = np.get<int>("length", m_length);
-            if(np.has("pos")){
-                m_lastPosition = np.get<int>("pos", m_lastPosition);
+    if (np.has(QStringLiteral("nowPlaying")) || np.has(QStringLiteral("volume")) || np.has(QStringLiteral("isPlaying")) || np.has(QStringLiteral("length")) || np.has(QStringLiteral("pos"))) {
+        if (np.get<QString>(QStringLiteral("player")) == m_player) {
+            m_nowPlaying = np.get<QString>(QStringLiteral("nowPlaying"), m_nowPlaying);
+            m_volume = np.get<int>(QStringLiteral("volume"), m_volume);
+            m_length = np.get<int>(QStringLiteral("length"), m_length);
+            if(np.has(QStringLiteral("pos"))){
+                m_lastPosition = np.get<int>(QStringLiteral("pos"), m_lastPosition);
                 m_lastPositionTime = QDateTime::currentMSecsSinceEpoch();
             }
-            m_playing = np.get<bool>("isPlaying", m_playing);
+            m_playing = np.get<bool>(QStringLiteral("isPlaying"), m_playing);
         }
     }
 
-    if (np.has("playerList")) {
-        m_playerList = np.get<QStringList>("playerList", QStringList());
+    if (np.has(QStringLiteral("playerList"))) {
+        m_playerList = np.get<QStringList>(QStringLiteral("playerList"), QStringList());
     }
     Q_EMIT propertiesChanged();
 
@@ -85,11 +85,6 @@ long MprisRemotePlugin::position() const
     }
 }
 
-void MprisRemotePlugin::connected()
-{
-    QDBusConnection::sessionBus().registerObject(dbusPath(), this, QDBusConnection::ExportAllContents);
-}
-
 QString MprisRemotePlugin::dbusPath() const
 {
     return "/modules/kdeconnect/devices/" + device()->id() + "/mprisremote";
@@ -97,49 +92,52 @@ QString MprisRemotePlugin::dbusPath() const
 
 void MprisRemotePlugin::requestPlayerStatus()
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("player",m_player);
-    np.set("requestNowPlaying",true);
-    np.set("requestVolume",true);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {
+        {"player", m_player},
+        {"requestNowPlaying", true},
+        {"requestVolume", true}}
+    );
     sendPackage(np);
 }
 
 void MprisRemotePlugin::requestPlayerList()
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("requestPlayerList", true);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {{"requestPlayerList", true}});
     sendPackage(np);
 }
 
 void MprisRemotePlugin::sendAction(const QString& action)
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("player", m_player);
-    np.set("action", action);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {
+        {"player", m_player},
+        {"action", action}
+    });
     sendPackage(np);
 }
 
 void MprisRemotePlugin::seek(int offset) const
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("player", m_player);
-    np.set("Seek", offset);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {
+        {"player", m_player},
+        {"Seek", offset}});
     sendPackage(np);
 }
 
 void MprisRemotePlugin::setVolume(int volume)
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("player", m_player);
-    np.set("setVolume",volume);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {
+        {"player", m_player},
+        {"setVolume",volume}
+    });
     sendPackage(np);
 }
 
 void MprisRemotePlugin::setPosition(int position)
 {
-    NetworkPackage np(PACKAGE_TYPE_MPRIS);
-    np.set("player", m_player);
-    np.set("SetPosition", position);
+    NetworkPackage np(PACKAGE_TYPE_MPRIS_REQUEST, {
+        {"player", m_player},
+        {"SetPosition", position}
+    });
     sendPackage(np);
 
     m_lastPosition = position;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Albert Vaca <albertvaka@gmail.com>
+ * Copyright 2015 Aleix Pol Gonzalez <aleixpol@kde.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -18,14 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MPRISREMOTEPLUGIN_H
-#define MPRISREMOTEPLUGIN_H
+#ifndef REMOTECONTROLPLUGIN_H
+#define REMOTECONTROLPLUGIN_H
 
 #include <QObject>
 
 #include <core/kdeconnectplugin.h>
 
-#define PACKAGE_TYPE_MOUSEPAD QLatin1String("kdeconnect.mousepad")
+#define PACKAGE_TYPE_MOUSEPAD_REQUEST QStringLiteral("kdeconnect.mousepad.request")
 
 class Q_DECL_EXPORT RemoteControlPlugin
     : public KdeConnectPlugin
@@ -34,17 +34,15 @@ class Q_DECL_EXPORT RemoteControlPlugin
     Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.device.remotecontrol")
 
 public:
-    explicit RemoteControlPlugin(QObject *parent, const QVariantList &args);
+    explicit RemoteControlPlugin(QObject* parent, const QVariantList &args);
     ~RemoteControlPlugin() override;
 
     bool receivePackage(const NetworkPackage& /*np*/) override { return false; }
-    void connected() override;
+    void connected() override {}
+    QString dbusPath() const override;
 
-    Q_INVOKABLE void moveCursor(const QPoint &p);
-    Q_INVOKABLE void sendCommand(const QString &name, bool val);
-
-private:
-    QString dbusPath() const;
+    Q_SCRIPTABLE void moveCursor(const QPoint &p);
+    Q_SCRIPTABLE void sendCommand(const QString &name, bool val);
 };
 
 #endif

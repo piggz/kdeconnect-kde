@@ -20,30 +20,58 @@
 
 #include "downloadjob.h"
 
-DownloadJob::DownloadJob(QHostAddress address, QVariantMap transferInfo): KJob()
+#ifndef Q_OS_WIN
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#endif
+
+#include "kdeconnectconfig.h"
+#include "lanlinkprovider.h"
+#include "core/core_debug.h"
+
+DownloadJob::DownloadJob(const QHostAddress& address, const QVariantMap& transferInfo)
+    : KJob()
+    , m_address(address)
+    , m_port(transferInfo[QStringLiteral("port")].toInt())
+    , m_socket(new QSslSocket)
 {
-    mAddress = address;
-    mPort = transferInfo["port"].toInt();
-    mSocket = QSharedPointer<QTcpSocket>(new QTcpSocket);
+    LanLinkProvider::configureSslSocket(m_socket.data(), transferInfo.value(QStringLiteral("deviceId")).toString(), true);
+
+    connect(m_socket.data(), SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketFailed(QAbstractSocket::SocketError)));
+    connect(m_socket.data(), &QAbstractSocket::connected, this, &DownloadJob::socketConnected);
+    // emit readChannelFinished when the socket gets disconnected. This seems to be a bug in upstream QSslSocket.
+    // Needs investigation and upstreaming of the fix. QTBUG-62257
+    connect(m_socket.data(), &QAbstractSocket::disconnected, m_socket.data(), &QAbstractSocket::readChannelFinished);
+}
+
+DownloadJob::~DownloadJob()
+{
+
 }
 
 void DownloadJob::start()
 {
-    //kDebug(kdeconnect_kded()) << "DownloadJob Start";
-    mSocket->connectToHost(mAddress, mPort, QIODevice::ReadOnly);
-    connect(mSocket.data(), SIGNAL(disconnected()),
-            this, SLOT(disconnected()));
-    //TODO: Implement payload encryption somehow (create an intermediate iodevice to encrypt the payload here?)
+    //TODO: Timeout?
+    // Cannot use read only, might be due to ssl handshake, getting QIODevice::ReadOnly error and no connection
+    m_socket->connectToHostEncrypted(m_address.toString(), m_port, QIODevice::ReadWrite);
 }
 
-void DownloadJob::disconnected()
+void DownloadJob::socketFailed(QAbstractSocket::SocketError error)
 {
-    //kDebug(kdeconnect_kded()) << "DownloadJob End";
+    qWarning() << error << m_socket->errorString();
+    setError(error + 1);
+    setErrorText(m_socket->errorString());
     emitResult();
 }
 
 QSharedPointer<QIODevice> DownloadJob::getPayload()
 {
-    //kDebug(kdeconnect_kded()) << "getPayload";
-    return mSocket.staticCast<QIODevice>();
+    return m_socket.staticCast<QIODevice>();
+}
+
+void DownloadJob::socketConnected()
+{
+    emitResult();
 }

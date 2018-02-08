@@ -23,6 +23,7 @@
 
 #include "../linkprovider.h"
 #include "loopbackdevicelink.h"
+#include <QPointer>
 
 class LoopbackLinkProvider
     : public LinkProvider
@@ -30,17 +31,17 @@ class LoopbackLinkProvider
     Q_OBJECT
 public:
     LoopbackLinkProvider();
-    ~LoopbackLinkProvider();
+    ~LoopbackLinkProvider() override;
 
-    QString name() { return "LoopbackLinkProvider"; }
-    int priority() { return PRIORITY_LOW; }
+    QString name() override { return QStringLiteral("LoopbackLinkProvider"); }
+    int priority() override { return PRIORITY_LOW; }
 
-    virtual void onStart();
-    virtual void onStop();
-    virtual void onNetworkChange();
+    void onStart() override;
+    void onStop() override;
+    void onNetworkChange() override;
 
 private:
-    LoopbackDeviceLink* loopbackDeviceLink;
+    QPointer<LoopbackDeviceLink> loopbackDeviceLink;
     NetworkPackage identityPackage;
     
 };

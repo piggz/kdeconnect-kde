@@ -23,7 +23,6 @@
 #include <KPluginMetaData>
 #include <KPluginLoader>
 #include <KPluginFactory>
-#include <QJsonArray>
 
 #include "core_debug.h"
 #include "device.h"
@@ -37,8 +36,8 @@ PluginLoader* PluginLoader::instance()
 
 PluginLoader::PluginLoader()
 {
-    QVector<KPluginMetaData> data = KPluginLoader::findPlugins("kdeconnect/");
-    foreach (const KPluginMetaData& metadata, data) {
+    const QVector<KPluginMetaData> data = KPluginLoader::findPlugins(QStringLiteral("kdeconnect/"));
+    for (const KPluginMetaData& metadata : data) {
         plugins[metadata.pluginId()] = metadata;
     }
 }
@@ -64,13 +63,13 @@ KdeConnectPlugin* PluginLoader::instantiatePluginForDevice(const QString& plugin
     }
 
     KPluginLoader loader(service.fileName());
-    KPluginFactory *factory = loader.factory();
+    KPluginFactory* factory = loader.factory();
     if (!factory) {
         qCDebug(KDECONNECT_CORE) << "KPluginFactory could not load the plugin:" << service.pluginId() << loader.errorString();
         return ret;
     }
 
-    const QStringList outgoingInterfaces = KPluginMetaData::readStringList(service.rawData(), "X-KdeConnect-OutgoingPackageType");
+    const QStringList outgoingInterfaces = KPluginMetaData::readStringList(service.rawData(), QStringLiteral("X-KdeConnect-OutgoingPackageType"));
 
     QVariant deviceVariant = QVariant::fromValue<Device*>(device);
 
@@ -80,24 +79,53 @@ KdeConnectPlugin* PluginLoader::instantiatePluginForDevice(const QString& plugin
         return ret;
     }
 
-    qCDebug(KDECONNECT_CORE) << "Loaded plugin:" << service.pluginId();
+    //qCDebug(KDECONNECT_CORE) << "Loaded plugin:" << service.pluginId();
     return ret;
 }
 
-QStringList PluginLoader::incomingInterfaces() const
+QStringList PluginLoader::incomingCapabilities() const
 {
     QSet<QString> ret;
-    foreach(const KPluginMetaData& service, plugins) {
-        ret += KPluginMetaData::readStringList(service.rawData(), "X-KdeConnect-SupportedPackageType").toSet();
+    for (const KPluginMetaData& service : qAsConst(plugins)) {
+        ret += KPluginMetaData::readStringList(service.rawData(), QStringLiteral("X-KdeConnect-SupportedPackageType")).toSet();
     }
     return ret.toList();
 }
 
-QStringList PluginLoader::outgoingInterfaces() const
+QStringList PluginLoader::outgoingCapabilities() const
 {
     QSet<QString> ret;
-    foreach(const KPluginMetaData& service, plugins) {
-        ret += KPluginMetaData::readStringList(service.rawData(), "X-KdeConnect-OutgoingPackageType").toSet();
+    for (const KPluginMetaData& service : qAsConst(plugins)) {
+        ret += KPluginMetaData::readStringList(service.rawData(), QStringLiteral("X-KdeConnect-OutgoingPackageType")).toSet();
     }
     return ret.toList();
+}
+
+QSet<QString> PluginLoader::pluginsForCapabilities(const QSet<QString>& incoming, const QSet<QString>& outgoing)
+{
+    QSet<QString> ret;
+
+    for (const KPluginMetaData& service : qAsConst(plugins)) {
+        const QSet<QString> pluginIncomingCapabilities = KPluginMetaData::readStringList(service.rawData(), QStringLiteral("X-KdeConnect-SupportedPackageType")).toSet();
+        const QSet<QString> pluginOutgoingCapabilities = KPluginMetaData::readStringList(service.rawData(), QStringLiteral("X-KdeConnect-OutgoingPackageType")).toSet();
+
+        bool capabilitiesEmpty = (pluginIncomingCapabilities.isEmpty() && pluginOutgoingCapabilities.isEmpty());
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+        bool capabilitiesIntersect = (outgoing.intersects(pluginIncomingCapabilities) || incoming.intersects(pluginOutgoingCapabilities));
+#else
+        QSet<QString> commonIncoming = incoming;
+        commonIncoming.intersect(pluginOutgoingCapabilities);
+        QSet<QString> commonOutgoing = outgoing;
+        commonOutgoing.intersect(pluginIncomingCapabilities);
+        bool capabilitiesIntersect = (!commonIncoming.isEmpty() || !commonOutgoing.isEmpty());
+#endif
+
+        if (capabilitiesIntersect || capabilitiesEmpty) {
+            ret += service.pluginId();
+        } else {
+            qCDebug(KDECONNECT_CORE) << "Not loading plugin" << service.pluginId() <<  "because device doesn't support it";
+        }
+    }
+
+    return ret;
 }

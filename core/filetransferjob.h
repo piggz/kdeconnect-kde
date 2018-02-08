@@ -22,16 +22,15 @@
 #ifndef FILETRANSFERJOB_H
 #define FILETRANSFERJOB_H
 
-#include <QIODevice>
-#include <QTime>
-#include <QTemporaryFile>
-#include <QSharedPointer>
-
 #include <KJob>
+
+#include <QElapsedTimer>
+#include <QIODevice>
+#include <QSharedPointer>
 #include <QUrl>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QBuffer>
+
+#include "kdeconnectcore_export.h"
 
 /**
  * @short It will stream a device into a url destination
@@ -39,7 +38,7 @@
  * Given a QIODevice, the file transfer job will use the system's QNetworkAccessManager
  * for putting the stream into the requested location.
  */
-class FileTransferJob
+class KDECONNECTCORE_EXPORT FileTransferJob
     : public KJob
 {
     Q_OBJECT
@@ -50,28 +49,30 @@ public:
      * @p size specifies the expected size of the stream we're reading.
      * @p destination specifies where these contents should be stored
      */
-    FileTransferJob(const QSharedPointer<QIODevice>& origin, qint64 size, const QUrl &destination);
-    virtual void start() Q_DECL_OVERRIDE;
-    QUrl destination() const { return mDestination; }
-    void setDeviceName(const QString &deviceName) { mDeviceName = deviceName; }
+    FileTransferJob(const QSharedPointer<QIODevice>& origin, qint64 size, const QUrl& destination);
+    void start() override;
+    QUrl destination() const { return m_destination; }
+    void setOriginName(const QString& from) { m_from = from; }
 
 private Q_SLOTS:
     void doStart();
 
 protected:
-    bool doKill() Q_DECL_OVERRIDE;
+    bool doKill() override;
 
 private:
     void startTransfer();
+    void transferFailed(QNetworkReply::NetworkError error);
     void transferFinished();
 
-    QSharedPointer<QIODevice> mOrigin;
-    QNetworkReply* mReply;
-    QString mDeviceName;
-    QUrl mDestination;
-    QTime mTime;
-    qulonglong mSpeedBytes;
-    qint64 mWritten;
+    QSharedPointer<QIODevice> m_origin;
+    QNetworkReply* m_reply;
+    QString m_from;
+    QUrl m_destination;
+    QElapsedTimer m_timer;
+    qulonglong m_speedBytes;
+    qint64 m_written;
+    qint64 m_size;
 };
 
 #endif

@@ -23,29 +23,46 @@
 
 #include <QObject>
 #include <QString>
-#include <QTcpSocket>
+#include <QSslSocket>
+#include <QSslCertificate>
 
-#include "../devicelink.h"
+#include <kdeconnectcore_export.h>
+#include "backends/devicelink.h"
+#include "uploadjob.h"
 
 class SocketLineReader;
 
-class LanDeviceLink
+class KDECONNECTCORE_EXPORT LanDeviceLink
     : public DeviceLink
 {
     Q_OBJECT
 
 public:
-    LanDeviceLink(const QString& deviceId, LinkProvider* parent, QTcpSocket* socket);
+    enum ConnectionStarted : bool { Locally, Remotely };
 
-    bool sendPackage(NetworkPackage& np);
-    bool sendPackageEncrypted(QCA::PublicKey& key, NetworkPackage& np);
+    LanDeviceLink(const QString& deviceId, LinkProvider* parent, QSslSocket* socket, ConnectionStarted connectionSource);
+    void reset(QSslSocket* socket, ConnectionStarted connectionSource);
+
+    QString name() override;
+    bool sendPackage(NetworkPackage& np) override;
+    UploadJob* sendPayload(const NetworkPackage& np);
+
+    void userRequestsPair() override;
+    void userRequestsUnpair() override;
+
+    void setPairStatus(PairStatus status) override;
+
+    bool linkShouldBeKeptAlive() override;
+
+    QHostAddress hostAddress() const;
 
 private Q_SLOTS:
     void dataReceived();
 
 private:
-    SocketLineReader* mSocketLineReader;
-
+    SocketLineReader* m_socketLineReader;
+    ConnectionStarted m_connectionSource;
+    QHostAddress m_hostAddress;
 };
 
 #endif

@@ -24,7 +24,7 @@
 #include <core/kdeconnectplugin.h>
 #include <core/device.h>
 
-#define PACKAGE_TYPE_SFTP QLatin1String("kdeconnect.sftp")
+#define PACKAGE_TYPE_SFTP_REQUEST QStringLiteral("kdeconnect.sftp.request")
 
 class KNotification;
 
@@ -35,18 +35,19 @@ class SftpPlugin
     Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.device.sftp")
     
 public:
-    explicit SftpPlugin(QObject *parent, const QVariantList &args);
-    virtual ~SftpPlugin();
+    explicit SftpPlugin(QObject* parent, const QVariantList& args);
+    ~SftpPlugin() override;
+
+    bool receivePackage(const NetworkPackage& np) override;
+    void connected() override {}
+    QString dbusPath() const override { return "/modules/kdeconnect/devices/" + deviceId + "/sftp"; }
 
 Q_SIGNALS:
     void packageReceived(const NetworkPackage& np);
     Q_SCRIPTABLE void mounted();
     Q_SCRIPTABLE void unmounted();
-    
-public Q_SLOTS:
-    virtual bool receivePackage(const NetworkPackage& np);
-    virtual void connected();
 
+public Q_SLOTS:
     Q_SCRIPTABLE void mount();
     Q_SCRIPTABLE void unmount();
     Q_SCRIPTABLE bool mountAndWait();
@@ -62,14 +63,13 @@ private Q_SLOTS:
     void onFailed(const QString& message);
     
 private:
-    QString dbusPath() const { return "/modules/kdeconnect/devices/" + deviceId + "/sftp"; }
     void knotify(int type, const QString& text, const QPixmap& icon) const;
     void addToDolphin();
     void removeFromDolphin();
     
 private:
     struct Pimpl;
-    QScopedPointer<Pimpl> m_d;
+    QScopedPointer<Pimpl> d;
     QString deviceId; //Storing it to avoid accessing device() from the destructor which could cause a crash
 
     QVariantMap remoteDirectories; //Actually a QMap<String, String>, but QDBus preffers this
