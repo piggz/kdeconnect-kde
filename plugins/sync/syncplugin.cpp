@@ -86,7 +86,6 @@ void SyncPlugin::receiveFile(const NetworkPackage& np)
     }
 
     FileTransferJob* job = np.createPayloadTransferJob(QUrl(f.absoluteFilePath()));
-    job->setDeviceName(device()->name());
     connect(job, SIGNAL(result(KJob*)), this, SLOT(finished(KJob*)));
     KIO::getJobTracker()->registerJob(job);
     job->start();
