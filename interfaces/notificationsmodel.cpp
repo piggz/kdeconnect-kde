@@ -29,6 +29,11 @@
 
 //#include "modeltest.h"
 
+//In older Qt released, qAsConst isnt available
+#ifdef SAILFISHOS
+#define qAsConst
+#endif
+
 NotificationsModel::NotificationsModel(QObject* parent)
     : QAbstractListModel(parent)
     , m_dbusInterface(nullptr)
