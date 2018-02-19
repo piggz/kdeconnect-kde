@@ -12,6 +12,8 @@ function(geninterface source_h output_h)
     set(libkdeconnect_HEADERS ${libkdeconnect_HEADERS} PARENT_SCOPE)
 endfunction()
 
+find_package(KF5Config 5.9 REQUIRED)
+
 set(libkdeconnect_SRC
     dbusinterfaces.cpp
     devicesmodel.cpp
