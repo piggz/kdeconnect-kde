@@ -20,7 +20,11 @@
 
 #include "pingplugin.h"
 
+#ifdef SAILFISHOS
+#include <notification.h>
+#else
 #include <KNotification>
+#endif
 #include <KLocalizedString>
 #include <KPluginFactory>
 
@@ -47,13 +51,16 @@ PingPlugin::~PingPlugin()
 
 bool PingPlugin::receivePackage(const NetworkPackage& np)
 {
+#ifdef SAILFISHOS
+
+#else
     KNotification* notification = new KNotification(QStringLiteral("pingReceived")); //KNotification::Persistent
     notification->setIconName(QStringLiteral("dialog-ok"));
     notification->setComponentName(QStringLiteral("kdeconnect"));
     notification->setTitle(device()->name());
     notification->setText(np.get<QString>(QStringLiteral("message"),i18n("Ping!"))); //This can be a source of spam
     notification->sendEvent();
-
+#endif
     return true;
 }
 

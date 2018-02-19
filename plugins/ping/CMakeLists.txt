@@ -1,6 +1,7 @@
 if (SAILFISHOS)
     pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
     set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
+    include_directories(${NNQT5_INCLUDE_DIRS})
 else()
     find_package(KF5 REQUIRED COMPONENTS Notifications)
     set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
