@@ -11,7 +11,7 @@ set(KDECONNECT_VERSION "${KDECONNECT_VERSION_MAJOR}.${KDECONNECT_VERSION_MINOR}.
 if (SAILFISHOS)
     set(KF5_MIN_VERSION 5.31.0)
     set(QT_MIN_VERSION "5.6.0")
-    set(KF5_REQUIRED_COMPONENTS I18n DBusAddons IconThemes)
+    set(KF5_REQUIRED_COMPONENTS I18n DBusAddons CoreAddons IconThemes)
     set(QCA_MIN_VERSION 2.0.0)
     pkg_search_module(SFOS REQUIRED sailfishapp)
     pkg_check_modules(QCA2 qca2-qt5>=${QCA_MIN_VERSION} REQUIRED)
