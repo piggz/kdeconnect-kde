@@ -18,14 +18,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SAILFISHOS
+#include <QCoreApplication>
+#else
 #include <QApplication>
+#endif
+
 #include <QNetworkAccessManager>
 #include <QTimer>
 
 #include <KDBusService>
+#ifdef SAILFISHOS
+#include <notification.h>
+#else
 #include <KNotification>
+#endif
 #include <KLocalizedString>
+
+#ifndef SAILFISHOS
 #include <KIO/AccessManager>
+#endif
 
 #include "core/daemon.h"
 #include "core/device.h"
@@ -44,6 +56,10 @@ public:
 
     void askPairingConfirmation(Device* device) override
     {
+#ifdef SAILFISHOS
+
+
+#else
         KNotification* notification = new KNotification(QStringLiteral("pairingRequest"));
         notification->setIconName(QStringLiteral("dialog-information"));
         notification->setComponentName(QStringLiteral("kdeconnect"));
@@ -53,17 +69,24 @@ public:
         connect(notification, &KNotification::action1Activated, device, &Device::acceptPairing);
         connect(notification, &KNotification::action2Activated, device, &Device::rejectPairing);
         notification->sendEvent();
+#endif
     }
 
     void reportError(const QString & title, const QString & description) override
     {
+#ifndef SAILFISHOS
         KNotification::event(KNotification::Error, title, description);
+#endif
     }
 
     QNetworkAccessManager* networkAccessManager() override
     {
         if (!m_nam) {
+#ifdef SAILFISHOS
+            m_nam = new QNetworkAccessManager(this);
+#else
             m_nam = new KIO::AccessManager(this);
+#endif
         }
         return m_nam;
     }
@@ -74,11 +97,19 @@ private:
 
 int main(int argc, char* argv[])
 {
+#ifdef SAILFISHOS
+    QCoreApplication app(argc, argv);
+#else
     QApplication app(argc, argv);
+#endif
+
     app.setApplicationName(QStringLiteral("kdeconnectd"));
     app.setApplicationVersion(QStringLiteral(KDECONNECT_VERSION_STRING));
     app.setOrganizationDomain(QStringLiteral("kde.org"));
+
+#ifndef SAILFISHOS
     app.setQuitOnLastWindowClosed(false);
+#endif
 
     KDBusService dbusService(KDBusService::Unique);
 
