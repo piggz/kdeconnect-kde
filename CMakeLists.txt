@@ -70,15 +70,18 @@ endif()
 add_subdirectory(daemon)
 add_subdirectory(plugins)
 add_subdirectory(cli)
-add_subdirectory(indicator)
-add_subdirectory(fileitemactionplugin)
-add_subdirectory(urlhandler)
+
+if (NOT SAILFISHOS)
+    add_subdirectory(indicator)
+    add_subdirectory(fileitemactionplugin)
+    add_subdirectory(urlhandler)
+endif()
 
 if(KF5DocTools_FOUND)
     add_subdirectory(doc)
 endif()
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT SAILFISHOS)
     add_subdirectory(tests)
 endif()
 
