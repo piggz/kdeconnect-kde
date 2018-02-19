@@ -1,4 +1,10 @@
-find_package(KF5 REQUIRED COMPONENTS Notifications)
+if (SAILFISHOS)
+    pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
+    set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
+else()
+    find_package(KF5 REQUIRED COMPONENTS Notifications)
+    set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
+endif()
 
 set(kdeconnect_ping_SRCS
     pingplugin.cpp
@@ -10,5 +16,5 @@ target_link_libraries(kdeconnect_ping
     kdeconnectcore
     Qt5::DBus
     KF5::I18n
-    KF5::Notifications
+    ${NOTIFICATION_LIB}
 )
