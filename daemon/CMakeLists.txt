@@ -2,6 +2,7 @@ project(kdeconnectd)
 
 if (SAILFISHOS)
     pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
+    include_directories(${NNQT5_INCLUDE_DIRS})
 else()
     find_package(KF5 REQUIRED COMPONENTS Notifications KIO)
 endif()
