@@ -1,11 +1,21 @@
 project(kdeconnectd)
 
-find_package(KF5 REQUIRED COMPONENTS Notifications KIO)
+if (SAILFISHOS)
+    pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
+else()
+    find_package(KF5 REQUIRED COMPONENTS Notifications KIO)
+endif()
 
 add_definitions(-DTRANSLATION_DOMAIN="kdeconnect-kded")
 
 add_executable(kdeconnectd kdeconnectd.cpp)
-target_link_libraries(kdeconnectd kdeconnectcore KF5::KIOWidgets KF5::DBusAddons KF5::Notifications KF5::I18n Qt5::Widgets)
+
+if (SAILFISHOS)
+    target_link_libraries(kdeconnectd kdeconnectcore KF5::DBusAddons ${NNQT5_LIBRARIES} KF5::I18n)
+else()
+    target_link_libraries(kdeconnectd kdeconnectcore KF5::KIOWidgets KF5::DBusAddons KF5::Notifications KF5::I18n Qt5::Widgets)
+endif()
+
 
 ecm_mark_nongui_executable(kdeconnectd)
 
