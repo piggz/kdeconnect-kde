@@ -16,6 +16,7 @@ if(BLUETOOTH_ENABLED)
 endif()
 
 if (SAILFISHOS)
+    find_package(KF5Config 5.9 REQUIRED)
     pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
     set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
 else()
