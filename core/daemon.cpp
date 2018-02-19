@@ -39,6 +39,11 @@
 #include "backends/devicelink.h"
 #include "backends/linkprovider.h"
 
+//In older Qt released, qAsConst isnt available
+#ifdef SAILFISHOS
+#define qAsConst
+#endif
+
 static Daemon* s_instance = nullptr;
 
 struct DaemonPrivate

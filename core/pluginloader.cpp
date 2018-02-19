@@ -28,6 +28,11 @@
 #include "device.h"
 #include "kdeconnectplugin.h"
 
+//In older Qt released, qAsConst isnt available
+#ifdef SAILFISHOS
+#define qAsConst
+#endif
+
 PluginLoader* PluginLoader::instance()
 {
     static PluginLoader* instance = new PluginLoader();
