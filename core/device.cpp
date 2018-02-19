@@ -37,6 +37,11 @@
 #include "kdeconnectconfig.h"
 #include "daemon.h"
 
+//In older Qt released, qAsConst isnt available
+#ifdef SAILFISHOS
+#define qAsConst
+#endif
+
 static void warn(const QString& info)
 {
     qWarning() << "Device pairing error" << info;
