@@ -15,7 +15,7 @@ find_package(Qt5 5.2 REQUIRED COMPONENTS Quick)
 
 if (SAILFISHOS)
     set(KF5_MIN_VERSION 5.31.0)
-    set(KF5_REQUIRED_COMPONENTS I18n DBusAddons)
+    set(KF5_REQUIRED_COMPONENTS I18n DBusAddons CoreAddons)
     set(QCA_MIN_VERSION 2.0.0)
     pkg_search_module(SFOS REQUIRED sailfishapp)
     pkg_check_modules(QCA2 qca2-qt5>=${QCA_MIN_VERSION} REQUIRED)
