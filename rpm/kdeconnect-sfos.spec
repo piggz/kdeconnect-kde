@@ -58,20 +58,21 @@ popd
 # >> install post
 # << install post
 
-desktop-file-install --delete-original       \
-  --dir %{buildroot}%{_datadir}/applications             \
-   %{buildroot}%{_datadir}/applications/*.desktop
+#desktop-file-install --delete-original       \
+#  --dir %{buildroot}%{_datadir}/applications             \
+#   %{buildroot}%{_datadir}/applications/*.desktop
 
 %files
 %defattr(-,root,root,-)
 %{_bindir}
 %{_libdir}
-%{_datadir}/%{name}
-%{_datadir}/applications/%{name}.desktop
+#%{_datadir}/%{name}
+#%{_datadir}/applications/%{name}.desktop
 /etc/xdg/autostart/kdeconnectd.desktop
 /usr/share/dbus-1/services/org.kde.kdeconnect.service
 /usr/share/knotifications5/kdeconnect.notifyrc
 /usr/share/kservicetypes5/kdeconnect_plugin.desktop
 #%{_datadir}/icons/hicolor/*/apps/%{name}.png
+/usr/share/icons/
 # >> files
 # << files
