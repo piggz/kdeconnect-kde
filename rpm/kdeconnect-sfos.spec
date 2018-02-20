@@ -66,7 +66,7 @@ popd
 %defattr(-,root,root,-)
 %{_bindir}
 %{_libdir}
-#%{_datadir}/%{name}
+%{_datadir}/%{name}
 #%{_datadir}/applications/%{name}.desktop
 /etc/xdg/autostart/kdeconnectd.desktop
 /usr/share/dbus-1/services/org.kde.kdeconnect.service
