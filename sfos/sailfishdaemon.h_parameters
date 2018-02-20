@@ -1,0 +1,16 @@
+-I/home/piggz/projects/kdeconnect-kde
+-I/usr/include/qt5/QtCrypto
+-I/home/piggz/projects/kdeconnect-kde
+-I/home/piggz/projects/kdeconnect-kde/build
+-I/usr/include/nemonotifications-qt5
+-I/home/piggz/projects/kdeconnect-kde/daemon
+-I/home/piggz/projects/kdeconnect-kde/build/daemon
+-DSAILFISHOS
+-DQT_NO_URL_CAST_FROM_STRING
+-D_GNU_SOURCE
+-D_LARGEFILE64_SOURCE
+-D_FILE_OFFSET_BITS=64
+-DTRANSLATION_DOMAIN="kdeconnect-kded"
+-o
+/home/piggz/projects/kdeconnect-kde/sfos/sailfishdaemon.h
+/home/piggz/projects/kdeconnect-kde/daemon/sailfishdaemon.moc

@@ -32,6 +32,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.kde.kdeconnect 1.0
 
+
 CoverBackground {
     Label {
         id: label
@@ -71,6 +72,5 @@ CoverBackground {
         anchors.centerIn: parent
         visible: devices.count == 0
     }
-
 }
 

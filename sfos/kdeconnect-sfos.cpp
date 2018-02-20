@@ -39,8 +39,6 @@
 #include <QQmlEngine>
 #include <notification.h>
 
-#include <plasmoid/declarativeplugin/kdeconnectdeclarativeplugin.h>
-
 int main(int argc, char *argv[])
 {
     // SailfishApp::main() will display "qml/kdeconnect-sfos.qml", if you need more
@@ -64,3 +62,4 @@ int main(int argc, char *argv[])
 }
 
 #include "kdeconnect-sfos.moc"
+

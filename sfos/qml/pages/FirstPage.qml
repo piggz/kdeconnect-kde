@@ -55,7 +55,10 @@ Page {
 
                 PageHeader { title: "KDE Connect" }
 
+                //TODO What should go here
             }
-    }
+
+        }
+
 }
 
