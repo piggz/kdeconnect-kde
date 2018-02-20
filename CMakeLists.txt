@@ -77,6 +77,8 @@ if (NOT SAILFISHOS)
     add_subdirectory(indicator)
     add_subdirectory(fileitemactionplugin)
     add_subdirectory(urlhandler)
+else()
+    add_subdirectory(sfos)
 endif()
 
 if(KF5DocTools_FOUND)
