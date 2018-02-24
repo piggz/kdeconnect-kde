@@ -36,8 +36,44 @@
 #include <QGuiApplication>
 #include <QQuickView>
 #include <QQmlContext>
+#include <QQmlEngine>
+#include <notification.h>
 
 #include <plasmoid/declarativeplugin/kdeconnectdeclarativeplugin.h>
+
+class Notify : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void message(const QString &title, const QString &body)
+    {
+        Notification notification;
+        QVariantList remoteactions;
+
+
+        remoteactions << Notification::remoteAction("yes",
+                                                    QString(),
+                                                    "com.kimmoli.harbour.maira",
+                                                    "/",
+                                                    "com.kimmoli.harbour.maira",
+                                                    "yes",
+                                                    QVariantList());
+
+        //notification.setAppName("kdeconnect");
+        notification.setSummary(title);
+        notification.setPreviewSummary(title);
+        notification.setBody(body);
+        notification.setPreviewBody(body);
+        //notification.setCategory("x-nemo.call.missed");
+        //notification.setItemCount(0);
+        //notification.setReplacesId(0);
+        notification.setIcon("icon-s-sync");
+        notification.setExpireTimeout(10000);
+        notification.setRemoteActions(remoteactions);
+
+        notification.publish();
+    };
+};
 
 int main(int argc, char *argv[])
 {
@@ -56,11 +92,16 @@ int main(int argc, char *argv[])
     QScopedPointer<QQuickView> view(SailfishApp::createView());
 
     KdeConnectDeclarativePlugin plugin;
-    plugin.registerTypes("uk.co.piggz.kdeconnect");
-    plugin.initializeEngine(view->engine(),"uk.co.piggz.kdeconnect");
+    plugin.registerTypes("ork.kde.kdeconnect");
+    plugin.initializeEngine(view->engine(),"org.kde.kdeconnect");
+
+    Notify notif;
+    view->engine()->rootContext()->setContextProperty(QStringLiteral("Notify"), &notif);
 
     view->setSource(SailfishApp::pathTo("qml/kdeconnect-sfos.qml"));
     view->showFullScreen();
 
     return app->exec();
 }
+
+#include "kdeconnect-sfos.moc"

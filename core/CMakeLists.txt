@@ -21,7 +21,7 @@ if (SAILFISHOS)
     set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
 else()
     find_package(KF5Notifications 5.9 REQUIRED)
-    set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
+    set(NOTIFICATION_LIB KF5::Notifications)
 endif()
 
 set(kdeconnectcore_SRCS

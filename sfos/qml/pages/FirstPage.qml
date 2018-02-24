@@ -30,7 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import uk.co.piggz.kdeconnect 1.0
+import org.kde.kdeconnect 1.0
+import Nemo.Notifications 1.0
 
 Page {
     allowedOrientations: Orientation.Portrait
@@ -54,9 +55,65 @@ Page {
 
                 PageHeader { title: "KDE Connect" }
 
-                //TODO What should go here
-            }
+                Button {
+                    DevicesModel {
+                        id: model;
+                    }
 
-        }
+                    onClicked: {
+                        Notify.message("Hello", "over there");
+                    }
+
+                //TODO What should go here
+                }
+
+                Button {
+                    onClicked: {
+                            notification.show("Hello");
+                    }
+                }
+
+                     Notification {
+         id: notification
+         category: "x-nemo.example"
+         appName: "Example App"
+         appIcon: "/usr/share/example-app/icon-l-application"
+         summary: "Notification summary"
+         body: "Notification body"
+         previewSummary: "Notification preview summary"
+         previewBody: "Notification preview body"
+         itemCount: 5
+         timestamp: "2013-02-20 18:21:00"
+         remoteActions: [ {
+             "name": "default",
+             "displayName": "Do something",
+             "icon": "icon-s-setting",
+             "service": "org.nemomobile.example",
+             "path": "/example",
+             "iface": "org.nemomobile.example",
+             "method": "doSomething",
+             "arguments": [ "argument", 1 ]
+         },{
+             "name": "ignore",
+             "displayName": "Ignore the problem",
+             "icon": "icon-s-time",
+             "service": "org.nemomobile.example",
+             "path": "/example",
+             "iface": "org.nemomobile.example",
+             "method": "ignore",
+             "arguments": [ "argument", 1 ]
+         } ]
+         onClicked: console.log("Clicked")
+         onClosed: console.log("Closed, reason: " + reason)
+
+                     }
+                Button {
+                    onClicked: {
+                            notification.publish();
+                    }
+                }
+
+            }
+    }
 }
 
