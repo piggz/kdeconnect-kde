@@ -40,60 +40,7 @@
 #include "kdeconnect-version.h"
 
 #ifdef SAILFISHOS
-#include <notification.h>
-
-class SailfishDaemon : public Daemon
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.daemon")
-public:
-    SailfishDaemon(QObject* parent = Q_NULLPTR)
-        : Daemon(parent)
-        , m_nam(Q_NULLPTR)
-    {}
-
-    void askPairingConfirmation(Device* device) override
-    {
-        qDebug() << "Pairing request from " << device->name().toHtmlEscaped();
-
-        Notification *notification = new Notification(this);
-
-        notification->setAppName(QCoreApplication::applicationName());
-        notification->setPreviewSummary(i18n("Pairing request from %1", device->name().toHtmlEscaped()));
-        notification->setPreviewBody(i18n("Click here to pair"));
-        notification->setIcon("icon-s-sync");
-        notification->setExpireTimeout(10000);
-
-        connect(notification, &Notification::closed,
-                [=]( uint reason ) {
-                    qDebug() << "Notification closed" << reason;
-                    if (reason == 2) { //clicked
-                        device->acceptPairing();
-                    } else {
-                        device->rejectPairing();
-                    }
-                });
-
-        notification->publish();
-    }
-
-    void reportError(const QString & title, const QString & description) override
-    {
-        qDebug() << "Error:  " << title << ":" << description;
-    }
-
-    QNetworkAccessManager* networkAccessManager() override
-    {
-        if (!m_nam) {
-            m_nam = new QNetworkAccessManager(this);
-        }
-        return m_nam;
-    }
-
-private:
-    QNetworkAccessManager* m_nam;
-};
-
+#include "sfos/sailfishdaemon.h"
 #else
 #include <KNotification>
 class DesktopDaemon : public Daemon
