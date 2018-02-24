@@ -32,7 +32,6 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.kde.kdeconnect 1.0
 
-
 CoverBackground {
     Label {
         id: label
@@ -64,13 +63,12 @@ CoverBackground {
 
             Label { text: display }
         }
-
-
     }
     Label {
         text: qsTr("No paired \ndevices in range")
         anchors.centerIn: parent
         visible: devices.count == 0
     }
+
 }
 
