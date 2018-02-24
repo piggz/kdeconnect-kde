@@ -1,7 +1,12 @@
 find_package(Qt5 5.2 REQUIRED COMPONENTS DBus)
 
+<<<<<<< HEAD
 pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
 include_directories(${NNQT5_INCLUDE_DIRS})
+=======
+    pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
+    include_directories(${NNQT5_INCLUDE_DIRS})
+>>>>>>> Address review comments
 
 set(kdeconnectsfos_SRCS
     kdeconnect-sfos.cpp
