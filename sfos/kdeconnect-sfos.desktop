@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 X-Nemo-Application-Type=generic
-Icon=128-apps-kdeconnect
+Icon=kdeconnect
 Exec=kdeconnect-sfos
 Name=KDE Connect
 # translation example:
