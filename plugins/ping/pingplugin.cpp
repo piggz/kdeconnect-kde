@@ -22,6 +22,7 @@
 
 #ifdef SAILFISHOS
 #include <notification.h>
+#include <QCoreApplication>
 #else
 #include <KNotification>
 #endif
@@ -52,7 +53,13 @@ PingPlugin::~PingPlugin()
 bool PingPlugin::receivePackage(const NetworkPackage& np)
 {
 #ifdef SAILFISHOS
+    Notification *notification = new Notification(this);
 
+    notification->setAppName(QCoreApplication::applicationName());
+    notification->setPreviewSummary(device()->name());
+    notification->setPreviewBody(np.get<QString>(QStringLiteral("message"),i18n("Ping!")));
+    notification->setIcon("icon-s-alarm");
+    notification->publish();
 #else
     KNotification* notification = new KNotification(QStringLiteral("pingReceived")); //KNotification::Persistent
     notification->setIconName(QStringLiteral("dialog-ok"));
