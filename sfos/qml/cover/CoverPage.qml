@@ -30,24 +30,47 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.kde.kdeconnect 1.0
 
 CoverBackground {
     Label {
         id: label
+        anchors.top: parent.top
+        anchors.topMargin: Theme.paddingMedium
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: qsTr("KDE Connect")
+    }
+
+    SilicaListView {
+        id: devices
+        anchors.top: label.bottom
+        anchors.margins: Theme.paddingSmall
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        visible: count > 0
+
+        model: DevicesSortProxyModel {
+                sourceModel: DevicesModel { displayFilter: DevicesModel.Reachable | DevicesModel.Paired }
+            }
+
+        width: parent.width
+        spacing: Theme.paddingLarge
+
+        delegate: ListItem {
+            width: ListView.view.width
+            height: Theme.itemSizeMedium
+
+            Label { text: display }
+        }
+
+
+    }
+    Label {
+        text: qsTr("No paired \ndevices in range")
         anchors.centerIn: parent
-        text: qsTr("My Cover")
+        visible: devices.count == 0
     }
 
-    CoverActionList {
-        id: coverAction
-
-        CoverAction {
-            iconSource: "image://theme/icon-cover-next"
-        }
-
-        CoverAction {
-            iconSource: "image://theme/icon-cover-pause"
-        }
-    }
 }
 
