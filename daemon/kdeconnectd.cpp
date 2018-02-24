@@ -28,11 +28,6 @@
 #include <QTimer>
 
 #include <KDBusService>
-#ifdef SAILFISHOS
-#include <notification.h>
-#else
-#include <KNotification>
-#endif
 #include <KLocalizedString>
 
 #ifndef SAILFISHOS
@@ -44,6 +39,63 @@
 #include "core/backends/pairinghandler.h"
 #include "kdeconnect-version.h"
 
+#ifdef SAILFISHOS
+#include <notification.h>
+
+class SailfishDaemon : public Daemon
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.kde.kdeconnect.daemon")
+public:
+    SailfishDaemon(QObject* parent = Q_NULLPTR)
+        : Daemon(parent)
+        , m_nam(Q_NULLPTR)
+    {}
+
+    void askPairingConfirmation(Device* device) override
+    {
+        qDebug() << "Pairing request from " << device->name().toHtmlEscaped();
+
+        Notification *notification = new Notification(this);
+
+        notification->setAppName(QCoreApplication::applicationName());
+        notification->setPreviewSummary(i18n("Pairing request from %1", device->name().toHtmlEscaped()));
+        notification->setPreviewBody(i18n("Click here to pair"));
+        notification->setIcon("icon-s-sync");
+        notification->setExpireTimeout(10000);
+
+        connect(notification, &Notification::closed,
+                [=]( uint reason ) {
+                    qDebug() << "Notification closed" << reason;
+                    if (reason == 2) { //clicked
+                        device->acceptPairing();
+                    } else {
+                        device->rejectPairing();
+                    }
+                });
+
+        notification->publish();
+    }
+
+    void reportError(const QString & title, const QString & description) override
+    {
+        qDebug() << "Error:  " << title << ":" << description;
+    }
+
+    QNetworkAccessManager* networkAccessManager() override
+    {
+        if (!m_nam) {
+            m_nam = new QNetworkAccessManager(this);
+        }
+        return m_nam;
+    }
+
+private:
+    QNetworkAccessManager* m_nam;
+};
+
+#else
+#include <KNotification>
 class DesktopDaemon : public Daemon
 {
     Q_OBJECT
@@ -56,10 +108,6 @@ public:
 
     void askPairingConfirmation(Device* device) override
     {
-#ifdef SAILFISHOS
-
-
-#else
         KNotification* notification = new KNotification(QStringLiteral("pairingRequest"));
         notification->setIconName(QStringLiteral("dialog-information"));
         notification->setComponentName(QStringLiteral("kdeconnect"));
@@ -69,24 +117,17 @@ public:
         connect(notification, &KNotification::action1Activated, device, &Device::acceptPairing);
         connect(notification, &KNotification::action2Activated, device, &Device::rejectPairing);
         notification->sendEvent();
-#endif
     }
 
     void reportError(const QString & title, const QString & description) override
     {
-#ifndef SAILFISHOS
         KNotification::event(KNotification::Error, title, description);
-#endif
     }
 
     QNetworkAccessManager* networkAccessManager() override
     {
         if (!m_nam) {
-#ifdef SAILFISHOS
-            m_nam = new QNetworkAccessManager(this);
-#else
             m_nam = new KIO::AccessManager(this);
-#endif
         }
         return m_nam;
     }
@@ -106,6 +147,8 @@ private:
     QNetworkAccessManager* m_nam;
 };
 
+#endif
+
 int main(int argc, char* argv[])
 {
 #ifdef SAILFISHOS
@@ -124,7 +167,12 @@ int main(int argc, char* argv[])
 
     KDBusService dbusService(KDBusService::Unique);
 
+#ifdef SAILFISHOS
+    Daemon* daemon = new SailfishDaemon;
+#else
     Daemon* daemon = new DesktopDaemon;
+#endif
+
     QObject::connect(daemon, SIGNAL(destroyed(QObject*)), &app, SLOT(quit()));
 
     return app.exec();

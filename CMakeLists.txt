@@ -7,8 +7,8 @@ set(KDECONNECT_VERSION_MINOR 2)
 set(KDECONNECT_VERSION_PATCH 1)
 set(KDECONNECT_VERSION "${KDECONNECT_VERSION_MAJOR}.${KDECONNECT_VERSION_MINOR}.${KDECONNECT_VERSION_PATCH}")
 
-
 if (SAILFISHOS)
+    find_package(PkgConfig)
     set(KF5_MIN_VERSION 5.31.0)
     set(QT_MIN_VERSION "5.6.0")
     set(KF5_REQUIRED_COMPONENTS I18n DBusAddons CoreAddons IconThemes)
@@ -17,12 +17,14 @@ if (SAILFISHOS)
     pkg_check_modules(QCA2 qca2-qt5>=${QCA_MIN_VERSION} REQUIRED)
     add_definitions(-DSAILFISHOS)
     include_directories(${CMAKE_SOURCE_DIR} ${QCA2_INCLUDEDIR})
+    add_definitions(-DQT_NO_URL_CAST_FROM_STRING)
 else()
     set(KF5_MIN_VERSION 5.42.0)
     set(QT_MIN_VERSION "5.7.0")
     set(KF5_REQUIRED_COMPONENTS I18n ConfigWidgets DBusAddons IconThemes Notifications KIO KCMUtils)
     set(QCA_MIN_VERSION 2.1.0)
     find_package(Qca-qt5 ${QCA_MIN_VERSION} REQUIRED)
+    add_definitions(-DQT_NO_URL_CAST_FROM_STRING -DQT_NO_KEYWORDS)
 endif()
 
 find_package(PkgConfig)
@@ -46,8 +48,6 @@ include(ECMInstallIcons)
 include(FeatureSummary)
 
 include(KDEConnectMacros.cmake)
-
-add_definitions(-DQT_NO_URL_CAST_FROM_STRING -DQT_NO_KEYWORDS)
 
 include(GenerateExportHeader)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
