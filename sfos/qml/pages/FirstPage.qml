@@ -55,24 +55,6 @@ Page {
 
                 PageHeader { title: "KDE Connect" }
 
-                Button {
-                    DevicesModel {
-                        id: model;
-                    }
-
-                    onClicked: {
-                        Notify.message("Hello", "over there");
-                    }
-
-                //TODO What should go here
-                }
-
-                Button {
-                    onClicked: {
-                            notification.show("Hello");
-                    }
-                }
-
             }
     }
 }
