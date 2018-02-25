@@ -20,8 +20,13 @@
 
 #include "batteryplugin.h"
 
+#ifdef SAILFISHOS
+#include <notification.h>
+#include <QCoreApplication>
+#else
 #include <KNotification>
-#include <QIcon>
+#endif
+
 #include <KLocalizedString>
 #include <KPluginFactory>
 
@@ -71,12 +76,22 @@ bool BatteryPlugin::receivePackage(const NetworkPackage& np)
     }
 
     if ( thresholdEvent == ThresholdBatteryLow && !isCharging ) {
+#ifdef SAILFISHOS
+        Notification *notification = new Notification(this);
+
+        notification->setAppName(QCoreApplication::applicationName());
+        notification->setPreviewSummary(i18nc("device name: low battery", "%1: Low Battery", device()->name()));
+        notification->setPreviewBody(i18n("Battery at %1%", currentCharge));
+        notification->setIcon("icon-m-battery");
+        notification->publish();
+#else
         KNotification* notification = new KNotification(QStringLiteral("batteryLow"));
         notification->setIconName(QStringLiteral("battery-040"));
         notification->setComponentName(QStringLiteral("kdeconnect"));
         notification->setTitle(i18nc("device name: low battery", "%1: Low Battery", device()->name()));
         notification->setText(i18n("Battery at %1%", currentCharge));
         notification->sendEvent();
+#endif
     }
 
     return true;
