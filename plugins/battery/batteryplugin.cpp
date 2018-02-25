@@ -20,7 +20,17 @@
 
 #include "batteryplugin.h"
 
+<<<<<<< HEAD
 #include <QIcon>
+=======
+#ifdef SAILFISHOS
+#include <notification.h>
+#include <QCoreApplication>
+#else
+#include <KNotification>
+#endif
+
+>>>>>>> Port battery plugin to sailfish
 #include <KLocalizedString>
 #include <KPluginFactory>
 
@@ -72,7 +82,26 @@ bool BatteryPlugin::receivePacket(const NetworkPacket& np)
     }
 
     if ( thresholdEvent == ThresholdBatteryLow && !isCharging ) {
+<<<<<<< HEAD
         Daemon::instance()->sendSimpleNotification(QStringLiteral("batteryLow"), i18nc("device name: low battery", "%1: Low Battery", device()->name()), i18n("Battery at %1%", currentCharge), QStringLiteral("battery-040"));
+=======
+#ifdef SAILFISHOS
+        Notification *notification = new Notification(this);
+
+        notification->setAppName(QCoreApplication::applicationName());
+        notification->setPreviewSummary(i18nc("device name: low battery", "%1: Low Battery", device()->name()));
+        notification->setPreviewBody(i18n("Battery at %1%", currentCharge));
+        notification->setIcon("icon-m-battery");
+        notification->publish();
+#else
+        KNotification* notification = new KNotification(QStringLiteral("batteryLow"));
+        notification->setIconName(QStringLiteral("battery-040"));
+        notification->setComponentName(QStringLiteral("kdeconnect"));
+        notification->setTitle(i18nc("device name: low battery", "%1: Low Battery", device()->name()));
+        notification->setText(i18n("Battery at %1%", currentCharge));
+        notification->sendEvent();
+#endif
+>>>>>>> Port battery plugin to sailfish
     }
 
     return true;
