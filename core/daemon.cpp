@@ -40,8 +40,8 @@
 #include "backends/linkprovider.h"
 
 //In older Qt released, qAsConst isnt available
-#ifdef SAILFISHOS
-#define qAsConst
+#if QT_VERSION < 0x050700
+#include "qasconst.h"
 #endif
 
 static Daemon* s_instance = nullptr;

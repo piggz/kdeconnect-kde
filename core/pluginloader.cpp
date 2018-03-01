@@ -29,8 +29,8 @@
 #include "kdeconnectplugin.h"
 
 //In older Qt released, qAsConst isnt available
-#ifdef SAILFISHOS
-#define qAsConst
+#if QT_VERSION < 0x050700
+#include "qasconst.h"
 #endif
 
 PluginLoader* PluginLoader::instance()
