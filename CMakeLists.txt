@@ -58,10 +58,14 @@ if(NOT SAILFISHOS)
     add_subdirectory(kcm)
     add_subdirectory(kcmplugin)
 endif()
-if(NOT WIN32 AND NOT SAILFISHOS)
-	add_subdirectory(kio)
+
+if(NOT WIN32)
+    if (NOT SAILFISHOS)
+        add_subdirectory(kio)
+    endif()
 	add_subdirectory(plasmoid)
 endif()
+
 add_subdirectory(icon)
 add_subdirectory(interfaces)
 
