@@ -37,5 +37,12 @@ ApplicationWindow
     initialPage: Component { FirstPage { } }
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
+
+    Keys.onPressed: {
+        if (event.key == Qt.Key_Back) {
+            console.log("back");
+            pageStack.pop();
+        }
+    }
 }
 
