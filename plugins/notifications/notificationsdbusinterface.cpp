@@ -30,6 +30,11 @@
 #include "notificationsplugin.h"
 #include "sendreplydialog.h"
 
+//In older Qt released, qAsConst isnt available
+#if QT_VERSION < QT_VERSION_CHECK(5,7,0)
+#include "qtcompat_p.h"
+#endif
+
 NotificationsDbusInterface::NotificationsDbusInterface(KdeConnectPlugin* plugin)
     : QDBusAbstractAdaptor(const_cast<Device*>(plugin->device()))
     , m_device(plugin->device())
@@ -122,9 +127,9 @@ void NotificationsDbusInterface::addNotification(Notification* noti)
 
     connect(noti, &Notification::dismissRequested,
             this, &NotificationsDbusInterface::dismissRequested);
-    
-    connect(noti, &Notification::replyRequested, this, [this,noti]{ 
-        replyRequested(noti); 
+
+    connect(noti, &Notification::replyRequested, this, [this,noti]{
+        replyRequested(noti);
     });
 
     const QString& publicId = newId();

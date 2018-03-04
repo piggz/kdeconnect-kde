@@ -4,7 +4,7 @@ if (SAILFISHOS)
     include_directories(${NNQT5_INCLUDE_DIRS})
 else()
     find_package(KF5 REQUIRED COMPONENTS Notifications)
-    set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
+    set(NOTIFICATION_LIB KF5::Notifications)
 endif()
 
 set(kdeconnect_ping_SRCS
