@@ -29,8 +29,8 @@
 #include "kdeconnectplugin.h"
 
 //In older Qt released, qAsConst isnt available
-#if QT_VERSION < 0x050700
-#include "qasconst.h"
+#if QT_VERSION < QT_VERSION_CHECK(5,7,0)
+#include "qtcompat_p.h"
 #endif
 
 PluginLoader* PluginLoader::instance()

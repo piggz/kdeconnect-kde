@@ -6,8 +6,8 @@
 #include <QCoreApplication>
 
 //In older Qt released, qAsConst isnt available
-#ifdef SAILFISHOS
-#define qAsConst
+#if QT_VERSION < QT_VERSION_CHECK(5,7,0)
+#include "qtcompat_p.h"
 #endif
 
 Q_DECLARE_METATYPE(QDBusPendingReply<>)
