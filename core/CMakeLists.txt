@@ -15,18 +15,6 @@ if(BLUETOOTH_ENABLED)
     add_subdirectory(backends/bluetooth)
 endif()
 
-<<<<<<< HEAD
-=======
-if (SAILFISHOS)
-    find_package(KF5Config 5.9 REQUIRED)
-    pkg_check_modules(NNQT5 REQUIRED nemonotifications-qt5)
-    set(NOTIFICATION_LIB ${NNQT5_LIBRARIES})
-else()
-    find_package(KF5Notifications 5.9 REQUIRED)
-    set(NOTIFICATION_LIB KF5::Notifications)
-endif()
-
->>>>>>> Address review comments
 set(kdeconnectcore_SRCS
     ${backends_kdeconnect_SRCS}
 
