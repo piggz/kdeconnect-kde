@@ -68,7 +68,6 @@ public:
 public Q_SLOTS:
     void dismissAll();
 
-
 private Q_SLOTS:
     void notificationAdded(const QString& id);
     void notificationRemoved(const QString& id);
