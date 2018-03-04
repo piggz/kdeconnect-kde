@@ -20,7 +20,6 @@
 
 #include <QCoreApplication>
 #include <QNetworkAccessManager>
-#include <QTimer>
 
 #include <KDBusService>
 #include <KLocalizedString>
@@ -83,3 +82,22 @@ public:
 private:
     QNetworkAccessManager* m_nam;
 };
+
+int main(int argc, char* argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    app.setApplicationName(QStringLiteral("kdeconnectd"));
+    app.setApplicationVersion(QStringLiteral(KDECONNECT_VERSION_STRING));
+    app.setOrganizationDomain(QStringLiteral("kde.org"));
+
+    KDBusService dbusService(KDBusService::Unique);
+
+    Daemon* daemon = new SailfishDaemon;
+
+    QObject::connect(daemon, SIGNAL(destroyed(QObject*)), &app, SLOT(quit()));
+
+    return app.exec();
+}
+
+#include "sailfishdaemon.moc"

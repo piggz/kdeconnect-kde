@@ -18,31 +18,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SAILFISHOS
-#include <QCoreApplication>
-#else
 #include <QApplication>
-#endif
-
 #include <QNetworkAccessManager>
 #include <QTimer>
 
 #include <KDBusService>
+#include <KNotification>
 #include <KLocalizedString>
-
-#ifndef SAILFISHOS
 #include <KIO/AccessManager>
-#endif
 
 #include "core/daemon.h"
 #include "core/device.h"
 #include "core/backends/pairinghandler.h"
 #include "kdeconnect-version.h"
 
-#ifdef SAILFISHOS
-#include "sfos/sailfishdaemon.h"
-#else
-#include <KNotification>
 class DesktopDaemon : public Daemon
 {
     Q_OBJECT
@@ -83,32 +72,17 @@ private:
     QNetworkAccessManager* m_nam;
 };
 
-#endif
-
 int main(int argc, char* argv[])
 {
-#ifdef SAILFISHOS
-    QCoreApplication app(argc, argv);
-#else
     QApplication app(argc, argv);
-#endif
-
     app.setApplicationName(QStringLiteral("kdeconnectd"));
     app.setApplicationVersion(QStringLiteral(KDECONNECT_VERSION_STRING));
     app.setOrganizationDomain(QStringLiteral("kde.org"));
-
-#ifndef SAILFISHOS
     app.setQuitOnLastWindowClosed(false);
-#endif
 
     KDBusService dbusService(KDBusService::Unique);
 
-#ifdef SAILFISHOS
-    Daemon* daemon = new SailfishDaemon;
-#else
     Daemon* daemon = new DesktopDaemon;
-#endif
-
     QObject::connect(daemon, SIGNAL(destroyed(QObject*)), &app, SLOT(quit()));
 
     return app.exec();
