@@ -22,18 +22,11 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.kde.kdeconnect 1.0
 
-ListItem
+Button
 {
     property alias pluginName: checker.pluginName
     property var interfaceFactory
     property string component
-    property alias label: lbl.text
-
-    contentHeight: Theme.itemSizeSmall
-
-    Label {
-            id: lbl
-    }
 
     readonly property var checker: PluginChecker {
         id: checker

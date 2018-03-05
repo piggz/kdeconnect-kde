@@ -77,26 +77,29 @@ Page {
         }
 
         PluginItem {
-                    label: ("Multimedia control")
-                    interfaceFactory: MprisDbusInterfaceFactory
-                    component: "mpris.qml"
-                    pluginName: "mprisremote"
-                }
-                PluginItem {
-                    label: ("Remote input")
-                    interfaceFactory: RemoteControlDbusInterfaceFactory
-                    component: "mousepad.qml"
-                    pluginName: "remotecontrol"
-                }
-                PluginItem {
-                    readonly property var lockIface: LockDeviceDbusInterfaceFactory.create(deviceView.currentDevice.id())
-                    pluginName: "lockdevice"
-                    label: lockIface.isLocked ? ("Unlock") : ("Lock")
-                    onClicked: {
-                        lockIface.isLocked = !lockIface.isLocked;
-                    }
-                }
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: ("Multimedia control")
+            interfaceFactory: MprisDbusInterfaceFactory
+            component: "mpris.qml"
+            pluginName: "mprisremote"
         }
+        PluginItem {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: ("Remote input")
+            interfaceFactory: RemoteControlDbusInterfaceFactory
+            component: "mousepad.qml"
+            pluginName: "remotecontrol"
+        }
+        PluginItem {
+            anchors.horizontalCenter: parent.horizontalCenter
+            readonly property var lockIface: LockDeviceDbusInterfaceFactory.create(deviceView.currentDevice.id())
+            pluginName: "lockdevice"
+            text: lockIface.isLocked ? ("Unlock") : ("Lock")
+            onClicked: {
+                lockIface.isLocked = !lockIface.isLocked;
+            }
+        }
+    }
 
 }
 
