@@ -75,7 +75,6 @@ Page {
                 currentDevice.pluginCall("ping", "sendPing");
             }
         }
-
         PluginItem {
             anchors.horizontalCenter: parent.horizontalCenter
             text: ("Multimedia control")
@@ -100,7 +99,6 @@ Page {
             }
         }
     }
-
 }
 
 
