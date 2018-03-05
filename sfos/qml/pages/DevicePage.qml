@@ -33,7 +33,7 @@ import Sailfish.Silica 1.0
 import org.kde.kdeconnect 1.0
 
 Page {
-    id: page
+    id: deviceView
     property QtObject currentDevice
 
     // The effective value will be restricted by ApplicationWindow.allowedOrientations
@@ -75,6 +75,27 @@ Page {
                 currentDevice.pluginCall("ping", "sendPing");
             }
         }
+
+        PluginItem {
+                    label: ("Multimedia control")
+                    interfaceFactory: MprisDbusInterfaceFactory
+                    component: "mpris.qml"
+                    pluginName: "mprisremote"
+                }
+                PluginItem {
+                    label: ("Remote input")
+                    interfaceFactory: RemoteControlDbusInterfaceFactory
+                    component: "mousepad.qml"
+                    pluginName: "remotecontrol"
+                }
+                PluginItem {
+                    readonly property var lockIface: LockDeviceDbusInterfaceFactory.create(deviceView.currentDevice.id())
+                    pluginName: "lockdevice"
+                    label: lockIface.isLocked ? ("Unlock") : ("Lock")
+                    onClicked: {
+                        lockIface.isLocked = !lockIface.isLocked;
+                    }
+                }
         }
 
 }
