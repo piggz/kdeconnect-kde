@@ -31,10 +31,6 @@ find_package(PkgConfig)
 find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_SOURCE_DIR}/cmake)
 
-find_package(Qt5 ${QT_MIN_VERSION} REQUIRED COMPONENTS Quick)
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS ${KF5_REQUIRED_COMPONENTS})
-find_package(KF5 ${KF5_MIN_VERSION} COMPONENTS DocTools)
-
 include_directories(${CMAKE_SOURCE_DIR})
 
 configure_file(kdeconnect-version.h.in ${CMAKE_CURRENT_BINARY_DIR}/kdeconnect-version.h)
