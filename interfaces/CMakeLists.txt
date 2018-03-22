@@ -1,8 +1,5 @@
 project(KDEConnectInterfaces)
 
-find_package(KF5Config 5.9 REQUIRED)
-find_package(Qt5DBus 5.6 REQUIRED)
-
 function(geninterface source_h output_h)
     set(xml_file ${CMAKE_CURRENT_BINARY_DIR}/${output_h}.xml)
     qt5_generate_dbus_interface( ${source_h} ${xml_file})

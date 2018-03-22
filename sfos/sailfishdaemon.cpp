@@ -79,6 +79,19 @@ public:
         return m_nam;
     }
 
+       void sendSimpleNotification(const QString &eventId, const QString &title, const QString &text, const QString &iconName) override
+    {
+        Q_UNUSED(eventId);
+        Notification *notification = new Notification(this);
+
+        notification->setAppName(QCoreApplication::applicationName());
+        notification->setPreviewSummary(title);
+        notification->setPreviewBody(text);
+        notification->setIcon(iconName);
+        notification->publish();
+    }
+
+
 private:
     QNetworkAccessManager* m_nam;
 };

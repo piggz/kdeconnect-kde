@@ -35,9 +35,6 @@
 #include <sailfishapp/sailfishapp.h>
 #include <QGuiApplication>
 #include <QQuickView>
-#include <QQmlContext>
-#include <QQmlEngine>
-#include <notification.h>
 
 int main(int argc, char *argv[])
 {
@@ -60,6 +57,4 @@ int main(int argc, char *argv[])
 
     return app->exec();
 }
-
-#include "kdeconnect-sfos.moc"
 

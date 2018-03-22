@@ -21,9 +21,16 @@ BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
+BuildRequires:  pkgconfig(nemonotifications-qt5)
+BuildRequires:  pkgconfig(qca2-qt5) >= 2.0.0
 BuildRequires:  desktop-file-utils
 BuildRequires:  cmake >= 3.0
-BuildRequires:  extra-cmake-modules >= %{_tar_path}
+BuildRequires:  extra-cmake-modules >= 5.31.0
+BuildRequires:  kcoreaddons-devel >= 5.31.0
+BuildRequires:  kdbusaddons-devel >= 5.31.0
+BuildRequires:  ki18n-devel >= 5.31.0
+BuildRequires:  kconfig-devel >= 5.31.0
+BuildRequires:  kiconthemes-devel >= 5.31.0
 
 %description
 Short description of my Sailfish OS Application

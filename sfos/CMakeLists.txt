@@ -8,7 +8,7 @@ set(kdeconnectsfos_SRCS
 )
 
 add_executable(kdeconnect-sfos ${kdeconnectsfos_SRCS})
-target_link_libraries(kdeconnect-sfos Qt5::Quick KF5::CoreAddons KF5::I18n sailfishapp Qt5::DBus kdeconnectinterfaces ${NNQT5_LIBRARIES})
+target_link_libraries(kdeconnect-sfos Qt5::Quick sailfishapp)
 
 install(TARGETS kdeconnect-sfos ${INSTALL_TARGETS_DEFAULT_ARGS})
 install(PROGRAMS kdeconnect-sfos.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
