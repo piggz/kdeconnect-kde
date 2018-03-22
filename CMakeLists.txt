@@ -7,8 +7,9 @@ set(KDECONNECT_VERSION_MINOR 2)
 set(KDECONNECT_VERSION_PATCH 1)
 set(KDECONNECT_VERSION "${KDECONNECT_VERSION_MAJOR}.${KDECONNECT_VERSION_MINOR}.${KDECONNECT_VERSION_PATCH}")
 
+find_package(PkgConfig)
+
 if (SAILFISHOS)
-    find_package(PkgConfig)
     set(KF5_MIN_VERSION 5.31.0)
     set(QT_MIN_VERSION "5.6.0")
     set(KF5_REQUIRED_COMPONENTS I18n DBusAddons CoreAddons IconThemes)
@@ -27,7 +28,6 @@ else()
     add_definitions(-DQT_NO_URL_CAST_FROM_STRING -DQT_NO_KEYWORDS)
 endif()
 
-find_package(PkgConfig)
 find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -42,6 +42,7 @@ include(ECMAddTests)
 include(ECMSetupVersion)
 include(ECMInstallIcons)
 include(FeatureSummary)
+include(KF5CoreAddonsMacros.cmake)
 
 include(KDEConnectMacros.cmake)
 

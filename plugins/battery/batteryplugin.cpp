@@ -20,17 +20,8 @@
 
 #include "batteryplugin.h"
 
-<<<<<<< HEAD
 #include <QIcon>
-=======
-#ifdef SAILFISHOS
-#include <notification.h>
-#include <QCoreApplication>
-#else
-#include <KNotification>
-#endif
 
->>>>>>> 308ee28c7fa158313de8bf770a6517d8c0d29aff
 #include <KLocalizedString>
 #include <KPluginFactory>
 
