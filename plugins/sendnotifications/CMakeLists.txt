@@ -1,10 +1,19 @@
+if (SAILFISHOS)
+	set(SN_PLUGIN_ENABLED_BY_DEFAULT "true")
+else()
+	set(SN_PLUGIN_ENABLED_BY_DEFAULT "false")
+endif()
+
+configure_file(kdeconnect_sendnotifications.json.in kdeconnect_sendnotifications.json)
+
 set(kdeconnect_sendnotifications_SRCS
     sendnotificationsplugin.cpp
     notificationslistener.cpp
     notifyingapplication.cpp
+    kdeconnect_sendnotifications.json
 )
 
-kdeconnect_add_plugin(kdeconnect_sendnotifications JSON kdeconnect_sendnotifications.json SOURCES ${kdeconnect_sendnotifications_SRCS})
+kdeconnect_add_plugin(kdeconnect_sendnotifications JSON "${CMAKE_CURRENT_BINARY_DIR}/kdeconnect_sendnotifications.json" SOURCES ${kdeconnect_sendnotifications_SRCS})
 
 target_link_libraries(kdeconnect_sendnotifications
     kdeconnectcore

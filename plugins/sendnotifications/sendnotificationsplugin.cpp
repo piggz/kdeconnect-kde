@@ -25,11 +25,7 @@
 
 #include <KPluginFactory>
 
-#ifdef SAILFISHOS
-K_PLUGIN_FACTORY_WITH_JSON( KdeConnectPluginFactory, "kdeconnect_sendnotifications_sfos.json", registerPlugin< SendNotificationsPlugin >(); )
-#else
 K_PLUGIN_FACTORY_WITH_JSON( KdeConnectPluginFactory, "kdeconnect_sendnotifications.json", registerPlugin< SendNotificationsPlugin >(); )
-#endif
 
 Q_LOGGING_CATEGORY(KDECONNECT_PLUGIN_SENDNOTIFICATION, "kdeconnect.plugin.sendnotification")
 
