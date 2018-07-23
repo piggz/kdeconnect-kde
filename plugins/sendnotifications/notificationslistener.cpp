@@ -39,9 +39,7 @@
 #include "notifyingapplication.h"
 
 //In older Qt released, qAsConst isnt available
-#if QT_VERSION < QT_VERSION_CHECK(5,7,0)
 #include "qtcompat_p.h"
-#endif
 
 NotificationsListener::NotificationsListener(KdeConnectPlugin* aPlugin)
     : QDBusAbstractAdaptor(aPlugin),

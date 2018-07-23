@@ -31,9 +31,7 @@
 #include "sendreplydialog.h"
 
 //In older Qt released, qAsConst isnt available
-#if QT_VERSION < QT_VERSION_CHECK(5,7,0)
 #include "qtcompat_p.h"
-#endif
 
 NotificationsDbusInterface::NotificationsDbusInterface(KdeConnectPlugin* plugin)
     : QDBusAbstractAdaptor(const_cast<Device*>(plugin->device()))
